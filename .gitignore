@@ -1,0 +1,9 @@
+django-backend
+dry/.env
+db.sqlite3
+env-health
+data.py
+__pycache__/
+*.pyc
+__pycache__
+
