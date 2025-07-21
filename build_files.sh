@@ -20,20 +20,14 @@
 # python3.9 manage.py migrate
 #!/bin/bash
 
-# Install virtualenv
-python3.9 -m pip install --upgrade pip
-python3.9 -m pip install virtualenv
+# Python setup
+python -m ensurepip --upgrade
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
 
-# Create and activate virtual environment
-python3.9 -m virtualenv venv
-source venv/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Collect static files
+# Django setup
 python manage.py collectstatic --noinput
-
-# Apply database migrations
 python manage.py makemigrations
 python manage.py migrate
+
+
