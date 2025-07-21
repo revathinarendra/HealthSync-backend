@@ -1,14 +1,17 @@
 #!/bin/bash
-set -e
 
-echo "---- Python Version ----"
-python --version
-echo "---- Installing requirements ----"
-pip install --upgrade pip
-pip install -r requirements.txt
+# Ensure pip is available
+python3.9 -m ensurepip --upgrade
 
-echo "---- Django setup ----"
-mkdir -p static
-python manage.py collectstatic --noinput
-python manage.py makemigrations
-python manage.py migrate
+# Upgrade pip
+python3.9 -m pip install --upgrade pip
+
+# Install dependencies from requirements.txt
+python3.9 -m pip install -r requirements.txt
+
+# Collect static files
+python3.9 manage.py collectstatic --noinput
+
+# Apply database migrations
+python3.9 manage.py makemigrations
+python3.9 manage.py migrate
