@@ -156,6 +156,7 @@ AUTH_PASSWORD_VALIDATORS = [
 REST_FRAMEWORK = {
     'EXCEPTION_HANDLER': 'utils.custom_exception_handler.custom_exception_handler',
     'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.SessionAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_RENDERER_CLASSES': (
@@ -173,6 +174,7 @@ SIMPLE_JWT = {
 }
 CORS_ALLOWED_ORIGINS = [
     'https://nucleux-puce.vercel.app',
+    'https://health-sync-sigma.vercel.app',
     'https://nucleux.vercel.app',
     'http://localhost:3000',
     'http://127.0.0.1:3000'
