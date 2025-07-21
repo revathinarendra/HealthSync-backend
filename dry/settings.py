@@ -28,17 +28,7 @@ from mongoengine import connect
 #     host=MONGO_DB_HOST
 # )
 
-MONGO_DB_NAME = os.getenv('MONGO_DB_NAME')
-MONGO_HOST = os.getenv('MONGO_HOST')
-MONGO_USERNAME = os.getenv('MONGO_USERNAME')
-MONGO_PASSWORD = os.getenv('MONGO_PASSWORD')
 
-connect(
-    db=MONGO_DB_NAME,
-    host=MONGO_HOST,
-    username=MONGO_USERNAME,
-    password=MONGO_PASSWORD,
-)
 
 # MONGO_DB_NAME = 'learnDrivingByUs'
 # MONGO_DB_USER = 'learndrivingbyus'
@@ -67,7 +57,17 @@ DEBUG = True
 ALLOWED_HOSTS = ['.vercel.app', 'localhost', '127.0.0.1','*']
 
 
+MONGO_DB_NAME = os.getenv('MONGO_DB_NAME')
+MONGO_HOST = os.getenv('MONGO_HOST')
+MONGO_USERNAME = os.getenv('MONGO_USERNAME')
+MONGO_PASSWORD = os.getenv('MONGO_PASSWORD')
 
+connect(
+    db=MONGO_DB_NAME,
+    host=MONGO_HOST,
+    username=MONGO_USERNAME,
+    password=MONGO_PASSWORD,
+)
 
 # Application definition
 
