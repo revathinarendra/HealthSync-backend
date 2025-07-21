@@ -202,7 +202,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 AUTH_USER_MODEL = 'accounts.Account'
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'public/static')
 MEDIA_URL = '/media/' 
 MEDIA_ROOT = 'media/'
