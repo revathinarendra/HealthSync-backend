@@ -1,0 +1,5 @@
+{
+  "scripts": {
+    "postinstall": "./vercel_postinstall.sh"
+  }
+}
