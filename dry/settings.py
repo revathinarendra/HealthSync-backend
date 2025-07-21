@@ -14,6 +14,41 @@ from pathlib import Path
 import os
 from datetime import timedelta
 from dotenv import load_dotenv
+from mongoengine import connect
+
+# MONGO_DB_NAME = os.environ.get("MONGO_DB_NAME", default="healthsync_db")
+# MONGO_DB_USER = os.environ.get("MONGO_DB_USER")
+# MONGO_DB_PASS = os.environ.get("MONGO_DB_PASS")
+# MONGO_DB_HOST = os.environ.get("MONGO_DB_HOST")
+
+# connect(
+#     db=MONGO_DB_NAME,
+#     username=MONGO_DB_USER,
+#     password=MONGO_DB_PASS,
+#     host=MONGO_DB_HOST
+# )
+
+MONGO_DB_NAME = os.getenv('MONGO_DB_NAME')
+MONGO_HOST = os.getenv('MONGO_HOST')
+MONGO_USERNAME = os.getenv('MONGO_USERNAME')
+MONGO_PASSWORD = os.getenv('MONGO_PASSWORD')
+
+connect(
+    db=MONGO_DB_NAME,
+    host=MONGO_HOST,
+    username=MONGO_USERNAME,
+    password=MONGO_PASSWORD,
+)
+
+# MONGO_DB_NAME = 'learnDrivingByUs'
+# MONGO_DB_USER = 'learndrivingbyus'
+# MONGO_DB_PASS = 'MF6f5w8Bvjpq4149'
+# MONGO_DB_HOST = f'mongodb+srv://{MONGO_DB_USER}:{MONGO_DB_PASS}@learndrivingbyus.efeknya.mongodb.net/{MONGO_DB_NAME}?retryWrites=true&w=majority'
+
+# connect(
+#     db=MONGO_DB_NAME,
+#     host=MONGO_DB_HOST
+# )
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -46,6 +81,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'accounts',
+    'health',
 ]
 
 MIDDLEWARE = [
