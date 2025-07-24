@@ -8,6 +8,7 @@ class BodyParametersSerializer(serializers.DocumentSerializer):
     class Meta:
         model = BodyParameters
         fields = '__all__'
+        # read_only_fields = ['score', 'status', 'components']
 
 
 

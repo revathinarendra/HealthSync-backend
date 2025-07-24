@@ -1,6 +1,6 @@
 import datetime
 from django.db import models
-from mongoengine import Document, EmbeddedDocument,ReferenceField,StringField, FloatField, DateTimeField, EmbeddedDocumentField, ObjectIdField,IntField
+from mongoengine import Document, EmbeddedDocument,ReferenceField,StringField, FloatField, DateTimeField, EmbeddedDocumentField, ObjectIdField,IntField, DictField
 from accounts.models import Account, UserProfile
 from bson import ObjectId
 
@@ -10,12 +10,14 @@ class BodyParameters(Document):
     #user = ReferenceField(Account, required=True)
     user_id = IntField(required=True)
     stress_level = FloatField()
-    sleep_time = StringField()
+    # sleep_time = StringField()
+    sleep_time = FloatField()
     sleep_quality = StringField()
     height = StringField()
     weight = FloatField()
     bmi = FloatField()
-    viseral_fats = StringField()
+    # viseral_fats = StringField()
+    viseral_fats = IntField()
     body_fat = FloatField()
     trunk_fat = FloatField()
     subcutaneous_fat = FloatField()
@@ -24,6 +26,11 @@ class BodyParameters(Document):
     waste_water = StringField()
     created_at = DateTimeField(default=datetime.datetime.utcnow)
     updated_at = DateTimeField(default=datetime.datetime.utcnow)
+
+   
+    score = FloatField()  # Updated from StringField
+    status = StringField()
+    components = DictField()  # Updated from models.JSONField
 
     meta = {'collection': 'body_parameters'}
     

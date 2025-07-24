@@ -4,19 +4,55 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from .models import *
 from datetime import datetime
+from utils.health_score import calculate_health_score
 
 # from .models import BodyParameters, BloodTestValues
 from .serializers import BodyParametersSerializer, BloodTestValuesSerializer,CompleteUrineExaminationSerializer, ErythrocyteSedimentationRateSerializer, BloodUreaNitrogenTestSerializer,LipidProfileSerializer,LiverFunctionTestSerializer,MedicalHistorySerializer,DailyRoutineSerializer
 
 # #################Body parameters############
 @api_view(['POST'])
-#@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def create_body_parameters(request):
     serializer = BodyParametersSerializer(data=request.data)
     if serializer.is_valid():
-        serializer.save()
-        return Response({'message': 'Body parameters saved successfully.'}, status=status.HTTP_201_CREATED)
+        body_param = serializer.save()
+
+        # Prepare input for health score calculation
+        body_data = {
+            'height': body_param.height,
+            'weight': body_param.weight,
+            'BMI': body_param.bmi,
+            'body_fat': body_param.body_fat,
+            'muscle': body_param.muscle,
+            'viseral_fats': body_param.viseral_fats,
+            'sleep_time': body_param.sleep_time,
+            'sleep_quality': body_param.sleep_quality,
+            'stress_level': body_param.stress_level,
+            'body_age': body_param.body_age,
+            'waste_water': body_param.waste_water,
+        }
+
+        result = calculate_health_score(body_data)
+        print(result)
+        # Update model instance with score data
+       
+        if 'error' not in result:
+            body_param.score = result['score']  # float
+            body_param.status = result['status']  # string
+        else:
+            body_param.score = 0.0
+            body_param.status = 'Error'
+        # components = result.get('components', {})
+        # body_param.components = components
+        body_param.save()
+
+        return Response({
+            'message': 'Body parameters saved successfully.',
+            'data': BodyParametersSerializer(body_param).data
+        }, status=status.HTTP_201_CREATED)
+
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 @api_view(['GET'])
@@ -27,6 +63,7 @@ def list_body_parameters(request):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def get_body_parameters_by_user(request, user_id):
     print("Called with user_id:", user_id)
     body_params = BodyParameters.objects.filter(user_id=user_id)
@@ -37,7 +74,7 @@ def get_body_parameters_by_user(request, user_id):
 
 
 @api_view(['PUT'])
-#@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def update_body_parameters(request, pk):
     try:
         body_param = BodyParameters.objects.get(pk=pk)
@@ -48,12 +85,15 @@ def update_body_parameters(request, pk):
     if serializer.is_valid():
         body_param.updated_at = datetime.utcnow()
         serializer.save()
-        return Response({'message': 'Body Parameters updated successfully.'}, status=status.HTTP_200_OK)
+        return Response({
+        'message': 'Body Parameters updated successfully.',
+        'data': BodyParametersSerializer(body_param).data
+        }, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['DELETE'])
-#@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def delete_body_parameters(request, pk):
     try:
         body_param = BodyParameters.objects.get(pk=pk)
@@ -70,20 +110,26 @@ def delete_body_parameters(request, pk):
 
 
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def create_blood_test_values(request):
     serializer = BloodTestValuesSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
-        return Response({"message":"Blood Test values saved successfully."},status=status.HTTP_200_OK)
+        return Response({
+            "message": "Blood Test values saved successfully.",
+            "data": serializer.data
+        }, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def list_blood_test_values(request):
     blood_tests= BloodTestValues.objects.all()
     serializer= BloodTestValuesSerializer(blood_tests, many=True)
     return Response(serializer.data,status=status.HTTP_200_OK)
 
 @api_view(['PUT'])
+@permission_classes([IsAuthenticated])
 def update_blood_test_values(request,pk):
     try:
         blood_test= BloodTestValues.objects.get(pk=pk)
@@ -98,7 +144,7 @@ def update_blood_test_values(request,pk):
 
 
 @api_view(['DELETE'])
-#@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def delete_blood_test_values(request, pk):
     try:
         blood_test= BloodTestValues.objects.get(pk=pk)
@@ -112,20 +158,24 @@ def delete_blood_test_values(request, pk):
 # ####################### cue ##################
     
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def create_complete_urine_examination(request):
     serializer = CompleteUrineExaminationSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
-        return Response({"message":"CUE saved successfully."},status=status.HTTP_200_OK)
+        return Response({"message":"CUE saved successfully.",
+         "data": serializer.data},status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def list_complete_urine_examinations(request):
     cue= CompleteUrineExamination.objects.all()
     serializer= CompleteUrineExaminationSerializer(cue, many=True)
     return Response(serializer.data,status=status.HTTP_200_OK)
 
 @api_view(['PUT'])
+@permission_classes([IsAuthenticated])
 def update_complete_urine_examination(request,pk):
     try:
         cue= CompleteUrineExamination.objects.get(pk=pk)
@@ -139,7 +189,7 @@ def update_complete_urine_examination(request,pk):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['DELETE'])
-#@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def delete_complete_urine_examination(request, pk):
     try:
         cue= CompleteUrineExamination.objects.get(pk=pk)
@@ -152,20 +202,24 @@ def delete_complete_urine_examination(request, pk):
 # ####################### ESR ##################
     
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def create_Erythrocyte_sedimentation_rate(request):
     serializer = ErythrocyteSedimentationRateSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
-        return Response({"message":"ESR saved successfully."},status=status.HTTP_200_OK)
+        return Response({"message":"ESR saved successfully.",
+         "data": serializer.data},status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def list_Erythrocyte_sedimentation_rates(request):
     esr= ErythrocyteSedimentationRate.objects.all()
     serializer= ErythrocyteSedimentationRateSerializer(esr, many=True)
     return Response(serializer.data,status=status.HTTP_200_OK)
 
 @api_view(['PUT'])
+@permission_classes([IsAuthenticated])
 def update_Erythrocyte_sedimentation_rate(request,pk):
     try:
         esr= ErythrocyteSedimentationRate.objects.get(pk=pk)
@@ -179,7 +233,7 @@ def update_Erythrocyte_sedimentation_rate(request,pk):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['DELETE'])
-#@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def delete_Erythrocyte_sedimentation_rate(request, pk):
     try:
         esr= ErythrocyteSedimentationRate.objects.get(pk=pk)
@@ -191,20 +245,24 @@ def delete_Erythrocyte_sedimentation_rate(request, pk):
 
 # ######################## BloodUreaNitrogenTest    ###########
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def create_blood_urea_nitrogen_test(request):
     serializer = BloodUreaNitrogenTestSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
-        return Response({"message": "Blood Urea Nitrogen Test saved successfully."}, status=status.HTTP_201_CREATED)
+        return Response({"message": "Blood Urea Nitrogen Test saved successfully.",
+         "data": serializer.data}, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def list_blood_urea_nitrogen_tests(request):
     tests = BloodUreaNitrogenTest.objects.all()
     serializer = BloodUreaNitrogenTestSerializer(tests, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 @api_view(['PUT'])
+@permission_classes([IsAuthenticated])
 def update_blood_urea_nitrogen_test(request, pk):
     try:
         test = BloodUreaNitrogenTest.objects.get(pk=pk)
@@ -219,6 +277,7 @@ def update_blood_urea_nitrogen_test(request, pk):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
 def delete_blood_urea_nitrogen_test(request, pk):
     try:
         test = BloodUreaNitrogenTest.objects.get(pk=pk)
@@ -231,15 +290,18 @@ def delete_blood_urea_nitrogen_test(request, pk):
 
 # ######################## LipidProfile    ###########
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def create_lipid_profile(request):
     serializer = LipidProfileSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
-        return Response({'message': 'Lipid Profile saved successfully.'}, status=status.HTTP_201_CREATED)
+        return Response({'message': 'Lipid Profile saved successfully.',
+         "data": serializer.data}, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def list_lipid_profiles(request):
     data = LipidProfile.objects.all()
     serializer = LipidProfileSerializer(data, many=True)
@@ -247,6 +309,7 @@ def list_lipid_profiles(request):
 
 
 @api_view(['PUT'])
+@permission_classes([IsAuthenticated])
 def update_lipid_profile(request, pk):
     try:
         obj = LipidProfile.objects.get(pk=pk)
@@ -262,7 +325,7 @@ def update_lipid_profile(request, pk):
 
 
 @api_view(['DELETE'])
-#@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def delete_lipid_profile(request, pk):
     try:
         obj= LipidProfile.objects.get(pk=pk)
@@ -274,15 +337,18 @@ def delete_lipid_profile(request, pk):
 
 # ######################## LiverFunctionTest    ###########
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def create_liver_function_test(request):
     serializer = LiverFunctionTestSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
-        return Response({'message': 'Liver Function Test saved successfully.'}, status=status.HTTP_201_CREATED)
+        return Response({'message': 'Liver Function Test saved successfully.',
+         "data": serializer.data}, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def list_liver_function_tests(request):
     data = LiverFunctionTest.objects.all()
     serializer = LiverFunctionTestSerializer(data, many=True)
@@ -290,6 +356,7 @@ def list_liver_function_tests(request):
 
 
 @api_view(['PUT'])
+@permission_classes([IsAuthenticated])
 def update_liver_function_test(request, pk):
     try:
         obj = LiverFunctionTest.objects.get(pk=pk)
@@ -306,7 +373,7 @@ def update_liver_function_test(request, pk):
 
 
 @api_view(['DELETE'])
-#@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def delete_liver_function_test(request, pk):
     try:
         obj= LiverFunctionTest.objects.get(pk=pk)
@@ -318,15 +385,18 @@ def delete_liver_function_test(request, pk):
 
 # ######################## MedicalHistory    ###########
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def create_medical_history(request):
     serializer = MedicalHistorySerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
-        return Response({'message': 'Medical History saved successfully.'}, status=status.HTTP_201_CREATED)
+        return Response({'message': 'Medical History saved successfully.',
+         "data": serializer.data}, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def list_medical_histories(request):
     data = MedicalHistory.objects.all()
     serializer = MedicalHistorySerializer(data, many=True)
@@ -334,6 +404,7 @@ def list_medical_histories(request):
 
 
 @api_view(['PUT'])
+@permission_classes([IsAuthenticated])
 def update_medical_history(request, pk):
     try:
         obj = MedicalHistory.objects.get(pk=pk)
@@ -349,7 +420,7 @@ def update_medical_history(request, pk):
 
 
 @api_view(['DELETE'])
-#@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def delete_medical_history(request, pk):
     try:
         obj= MedicalHistory.objects.get(pk=pk)
@@ -363,15 +434,18 @@ def delete_medical_history(request, pk):
 
 # ####################    DailyRoutine   #######################################
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def create_daily_routine(request):
     serializer = DailyRoutineSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
-        return Response({"message": "Daily routine saved successfully."}, status=status.HTTP_201_CREATED)
+        return Response({"message": "Daily routine saved successfully.",
+         "data": serializer.data}, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def list_daily_routines(request):
     routines = DailyRoutine.objects.all()
     serializer = DailyRoutineSerializer(routines, many=True)
@@ -379,6 +453,7 @@ def list_daily_routines(request):
 
 
 @api_view(['PUT'])
+@permission_classes([IsAuthenticated])
 def update_daily_routine(request, pk):
     try:
         obj = DailyRoutine.objects.get(pk=pk)
@@ -396,7 +471,7 @@ def update_daily_routine(request, pk):
 
 
 @api_view(['DELETE'])
-#@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def delete_daily_routine(request, pk):
     try:
         obj= DailyRoutine.objects.get(pk=pk)
