@@ -14,7 +14,6 @@ from .serializers import (
     ResetPasswordConfirmSerializer,  
     CitiesSerializer,
     ProfessionSerializer,
-    UserNameSerializer,
 )
 from rest_framework.generics import ListAPIView
 from rest_framework_simplejwt.tokens import RefreshToken
