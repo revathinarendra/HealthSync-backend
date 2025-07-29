@@ -13,7 +13,7 @@ sqlparse
 tzdata
 django-rest-framework-mongoengine
 dnspython
-google-generative-ai
+google-generative-ai>=0.3.1
 pdfplumber
 boto3
 whitenoise
