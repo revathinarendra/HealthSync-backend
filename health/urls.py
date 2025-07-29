@@ -60,5 +60,8 @@ urlpatterns = [
     path('daily-routine/delete/<str:pk>/', views.delete_daily_routine),
 
 
+    path('byUserId/<int:user_id>/', views.get_health_data_by_user),
+
+
 
 ]
