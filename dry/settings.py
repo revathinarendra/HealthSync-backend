@@ -14,6 +14,31 @@ from pathlib import Path
 import os
 from datetime import timedelta
 from dotenv import load_dotenv
+from mongoengine import connect
+
+# MONGO_DB_NAME = os.environ.get("MONGO_DB_NAME", default="healthsync_db")
+# MONGO_DB_USER = os.environ.get("MONGO_DB_USER")
+# MONGO_DB_PASS = os.environ.get("MONGO_DB_PASS")
+# MONGO_DB_HOST = os.environ.get("MONGO_DB_HOST")
+
+# connect(
+#     db=MONGO_DB_NAME,
+#     username=MONGO_DB_USER,
+#     password=MONGO_DB_PASS,
+#     host=MONGO_DB_HOST
+# )
+
+
+
+# MONGO_DB_NAME = 'learnDrivingByUs'
+# MONGO_DB_USER = 'learndrivingbyus'
+# MONGO_DB_PASS = 'MF6f5w8Bvjpq4149'
+# MONGO_DB_HOST = f'mongodb+srv://{MONGO_DB_USER}:{MONGO_DB_PASS}@learndrivingbyus.efeknya.mongodb.net/{MONGO_DB_NAME}?retryWrites=true&w=majority'
+
+# connect(
+#     db=MONGO_DB_NAME,
+#     host=MONGO_DB_HOST
+# )
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -32,7 +57,17 @@ DEBUG = True
 ALLOWED_HOSTS = ['.vercel.app', 'localhost', '127.0.0.1','*']
 
 
+MONGO_DB_NAME = os.getenv('MONGO_DB_NAME')
+MONGO_HOST = os.getenv('MONGO_HOST')
+MONGO_USERNAME = os.getenv('MONGO_USERNAME')
+MONGO_PASSWORD = os.getenv('MONGO_PASSWORD')
 
+connect(
+    db=MONGO_DB_NAME,
+    host=MONGO_HOST,
+    username=MONGO_USERNAME,
+    password=MONGO_PASSWORD,
+)
 
 # Application definition
 
@@ -46,9 +81,11 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'accounts',
+    'health',
 ]
 
 MIDDLEWARE = [
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -120,6 +157,7 @@ AUTH_PASSWORD_VALIDATORS = [
 REST_FRAMEWORK = {
     'EXCEPTION_HANDLER': 'utils.custom_exception_handler.custom_exception_handler',
     'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.SessionAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_RENDERER_CLASSES': (
@@ -137,6 +175,7 @@ SIMPLE_JWT = {
 }
 CORS_ALLOWED_ORIGINS = [
     'https://nucleux-puce.vercel.app',
+    'https://health-sync-sigma.vercel.app',
     'https://nucleux.vercel.app',
     'http://localhost:3000',
     'http://127.0.0.1:3000'
@@ -164,8 +203,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 AUTH_USER_MODEL = 'accounts.Account'
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'public/static')
+
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 MEDIA_URL = '/media/' 
 MEDIA_ROOT = 'media/'
 # Default primary key field type

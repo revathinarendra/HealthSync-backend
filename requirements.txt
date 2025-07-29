@@ -17,4 +17,3 @@ google-generative-ai
 pdfplumber
 boto3
 whitenoise
-

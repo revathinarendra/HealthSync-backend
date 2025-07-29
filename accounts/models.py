@@ -74,6 +74,7 @@ class Account(AbstractBaseUser):
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=False) # Accounts might be inactive until email verification or admin approval
     is_superadmin = models.BooleanField(default=False)
+    dietician_id = models.IntegerField(null=True, blank=True) # Optional field for dietician ID
 
     USERNAME_FIELD = "email" # Use email for login
     REQUIRED_FIELDS = ["username"] # Fields required when creating a user via createsuperuser command
