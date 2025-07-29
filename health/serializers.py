@@ -172,3 +172,77 @@ class DailyRoutineSerializer(serializers.DocumentSerializer):
     class Meta:
         model = DailyRoutine
         fields = '__all__'
+
+
+
+
+# -------------------------
+# Category Serializer
+# -------------------------
+class CategorySerializer(serializers.DocumentSerializer):
+    class Meta:
+        model = Category
+        fields = '__all__'
+
+
+# -------------------------
+# Parameter (Embedded)
+# -------------------------
+class ParameterSerializer(serializers.EmbeddedDocumentSerializer):
+    class Meta:
+        model = Parameter
+        fields = '__all__'
+
+
+# -------------------------
+# FAQ (Embedded)
+# -------------------------
+class FAQSerializer(serializers.EmbeddedDocumentSerializer):
+    class Meta:
+        model = FAQ
+        fields = '__all__'
+
+
+# -------------------------
+# Test Serializer
+# -------------------------
+class TestSerializer(serializers.DocumentSerializer):
+    parametersCovered_list = ParameterSerializer(required=False)
+    faqs = FAQSerializer(required=False)
+    category = CategorySerializer()
+
+    class Meta:
+        model = Test
+        fields = '__all__'
+
+
+# -------------------------
+# CartItem (Embedded)
+# -------------------------
+class CartItemSerializer(serializers.EmbeddedDocumentSerializer):
+   
+
+    class Meta:
+        model = CartItem
+        fields = '__all__'
+
+
+# -------------------------
+# AddToCart Serializer
+# -------------------------
+class AddToCartSerializer(serializers.DocumentSerializer):
+    items = CartItemSerializer(required=False, many=True)
+
+    class Meta:
+        model = AddToCart
+        fields = '__all__'
+
+class AppointmentSerializer(serializers.DocumentSerializer):
+    class Meta:
+        model = Appointment
+        fields = '__all__'
+
+class PaymentSerializer(serializers.DocumentSerializer):
+    class Meta:
+        model = Payment
+        fields = '__all__'

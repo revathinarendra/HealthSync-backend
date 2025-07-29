@@ -479,3 +479,40 @@ def delete_daily_routine(request, pk):
         return Response({'message': 'Daily routine deleted successfully.'}, status=status.HTTP_200_OK)
     except DailyRoutine.DoesNotExist:
         return Response({'error': 'Daily routine Test not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+
+
+MODEL_SERIALIZER_MAPPING = {
+    'body_parameters': (BodyParameters, BodyParametersSerializer),
+    'blood_test': (BloodTestValues, BloodTestValuesSerializer),
+    'urine_examination': (CompleteUrineExamination, CompleteUrineExaminationSerializer),
+    'esr': (ErythrocyteSedimentationRate, ErythrocyteSedimentationRateSerializer),
+    'bun_test': (BloodUreaNitrogenTest, BloodUreaNitrogenTestSerializer),
+    'lipid_profile': (LipidProfile, LipidProfileSerializer),
+    'liver_function': (LiverFunctionTest, LiverFunctionTestSerializer),
+    'medical_history': (MedicalHistory, MedicalHistorySerializer),
+    'daily_routine': (DailyRoutine, DailyRoutineSerializer),
+}
+
+
+@api_view(['GET'])
+# @permission_classes([IsAuthenticated])
+def get_health_data_by_user(request, user_id):
+    model_type = request.GET.get('type')
+
+    if not model_type:
+        return Response({'success': False, 'message': 'Query parameter "type" is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    model_info = MODEL_SERIALIZER_MAPPING.get(model_type)
+    if not model_info:
+        return Response({'success': False, 'message': f'Invalid type: {model_type}'}, status=status.HTTP_400_BAD_REQUEST)
+
+    model_class, serializer_class = model_info
+
+    try:
+        records = model_class.objects.filter(user_id=int(user_id)).order_by('-created_at')
+        serializer = serializer_class(records, many=True)
+        return Response({'success': True, 'data': serializer.data}, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'success': False, 'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -1,6 +1,6 @@
 import datetime 
 from django.db import models
-from mongoengine import Document, EmbeddedDocument,ReferenceField,StringField, FloatField, DateTimeField, EmbeddedDocumentField, ObjectIdField,IntField, DictField
+from mongoengine import Document, EmbeddedDocument,ReferenceField,StringField, FloatField, DateTimeField, EmbeddedDocumentField, ObjectIdField,IntField, DictField,BooleanField
 from accounts.models import Account, UserProfile
 from bson import ObjectId
 
@@ -268,7 +268,7 @@ class MedicalHistory(Document):
 
 # ####################    DailyRoutine   #######################################
 class DailyRoutine(Document):
-    user_id = StringField(required=True)
+    user_id = IntField(required=True)
     water_intake = FloatField()
     sleep_time = StringField()
     sleep_quality = StringField()
@@ -290,3 +290,126 @@ class DailyRoutine(Document):
     updated_at = DateTimeField(default=datetime.datetime.utcnow)
 
     meta = {'collection': 'daily_routine'}
+
+
+    
+# -------------------------
+# Category Model
+# -------------------------
+class Category(Document):
+    name = StringField(required=True, unique=True)
+    meta = {'collection': 'categories'}
+
+
+# -------------------------
+# Parameter (Embedded inside Test)
+# -------------------------
+class Parameter(EmbeddedDocument):
+    name = StringField(required=True)
+
+
+# -------------------------
+# FAQ (Embedded inside Test)
+# -------------------------
+class FAQ(EmbeddedDocument):
+    question = StringField()
+    answer = StringField()
+
+
+# -------------------------
+# Test Model
+# -------------------------
+class Test(Document):
+    testName = StringField(required=True)
+    testCode = StringField
+    price = FloatField(required=True)
+    specialInstruction = StringField(default='No special preparation required')
+    reportFrequency = StringField(default='Daily')
+    sampleReportLink = StringField()
+    homeCollectionAvailable = BooleanField(default=True)
+    labVisitAvailable = BooleanField(default=True)
+    applicableForHomeCollectionOnly = BooleanField(default=True)
+
+    overview = StringField()
+    purpose = StringField()
+    whatItMeasures = StringField()
+    preparations = StringField()
+    resultInterpretation = StringField()
+
+    parametersCovered_count = IntField(default=0)
+    parametersCovered_list = EmbeddedDocumentField(Parameter)
+
+    faqs = EmbeddedDocumentField(FAQ)
+
+    category = ReferenceField(Category, required=True)
+
+    created_at = DateTimeField(default=datetime.datetime.utcnow)
+    updated_at = DateTimeField(default=datetime.datetime.utcnow)
+
+    meta = {'collection': 'tests'}
+
+
+# -------------------------
+# CartItem (Embedded inside AddToCart)
+# -------------------------
+class CartItem(EmbeddedDocument):
+    test = ReferenceField(Test, required=True)
+    testName = StringField
+    parameterCount = IntField
+    quantity = IntField(default=1)
+
+
+# -------------------------
+# AddToCart Model
+# -------------------------
+class AddToCart(Document):
+    user_id = IntField(required=True)
+    items = EmbeddedDocumentField(CartItem)
+
+    subTotal = FloatField(default=0)
+    total = FloatField(default=0)
+    netPayableAmount = FloatField(default=0)
+
+    created_at = DateTimeField(default=datetime.datetime.utcnow)
+
+    meta = {'collection': 'add_to_cart'}
+
+    def clean(self):
+        """Auto-calculate totals before saving"""
+        self.subTotal = sum(item.price * item.quantity for item in self.items)
+        self.total = self.subTotal
+        self.netPayableAmount = self.total  # Can apply discounts/coupons later
+
+# -------------------------
+# Appointment Model
+# -------------------------
+class Appointment(Document):
+    user_id = IntField(required=True)
+    dietician_id = IntField(required=True)
+    appointment_date = DateTimeField
+    appointment_time = StringField
+    mode = StringField(choices=["Online", "In-person"])
+    status = StringField(choices=["Scheduled", "Completed", "Cancelled", "Rescheduled"], default="Scheduled")
+    notes = StringField()
+
+    created_at = DateTimeField(default=datetime.datetime.utcnow)
+    updated_at = DateTimeField(default=datetime.datetime.utcnow)
+
+    meta = {'collection': 'appointment'}
+
+
+# -------------------------
+# Payment Model
+# -------------------------
+
+class Payment(Document):
+    user_id = IntField(required=True)
+    test_booking_id = StringField(required=True)
+    amount = FloatField(required=True)
+    payment_method = StringField(choices=["UPI", "Card", "Cash", "NetBanking"])
+    status = StringField(choices=["Paid", "Pending", "Failed"], default="Pending")
+    transaction_id = StringField()
+
+    timestamp = DateTimeField(default=datetime.datetime.utcnow)
+
+    meta = {'collection': 'payment'}
