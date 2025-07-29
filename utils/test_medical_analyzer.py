@@ -5,7 +5,7 @@ import pdfplumber
 from io import BytesIO
 import json
 
-genai.configure(api_key="AIzaSyABLnzAACowPS1tIry_7X3ubnohxJojpRQ")
+genai.configure(api_key=os.environ.get('GEMINI_API_KEY'))
 
 client = genai.GenerativeModel("gemini-1.5-flash")  # Or 
 
