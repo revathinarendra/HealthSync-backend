@@ -14,6 +14,7 @@ from .serializers import (
     ResetPasswordConfirmSerializer,  
     CitiesSerializer,
     ProfessionSerializer,
+    UserNameSerializer,
 )
 from rest_framework.generics import ListAPIView
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -108,6 +109,29 @@ def user_profile(request):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+@api_view(['GET'])
+def get_user_profile_name_by_id(request):
+    profile_id = request.query_params.get('id') 
+    if not profile_id:
+        return Response(
+            {'error': 'The "profile_id" query parameter is required.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )    
+    try:
+        profile_id = int(profile_id)
+    except ValueError:
+        return Response(
+            {'error': 'Invalid "profile_id" format. Must be an integer.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    try:
+        user_profile = UserProfile.objects.get(id=profile_id)
+        return Response({"name": user_profile.name}, status=status.HTTP_200_OK)
+    except UserProfile.DoesNotExist:
+        return Response({"detail": "User profile not found."}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e: 
+        return Response({"detail": f"An unexpected error occurred: {e}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
 # --- Existing login_view ---
 @api_view(['POST'])
 def login_view(request):

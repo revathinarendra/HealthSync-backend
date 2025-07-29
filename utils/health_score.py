@@ -12,7 +12,10 @@ def calculate_health_score(body_params):
     }
     
     try:
-        height = float(body_params['height']) if isinstance(body_params['height'], str) else body_params['height']
+        height = body_params['height']
+        if isinstance(height, str):
+            height = float(height.replace('cm', '').strip())
+
         weight = body_params['weight']
         bmi = body_params['BMI']
         
@@ -67,10 +70,10 @@ def calculate_health_score(body_params):
             score_components['visceral_fat'] = 30 * 0.10
         
         # Sleep Score (15% weight)
-        if isinstance(body_params['sleep_time'], str):
-            sleep_hours = float(body_params['sleep_time'].split(':')[0])
-        else:
-            sleep_hours = body_params['sleep_time']
+        # if isinstance(body_params['sleep_time'], str):
+        #     sleep_hours = float(body_params['sleep_time'].split(':')[0])
+        # else:
+        sleep_hours = float(body_params['sleep_time'])
         
         sleep_quality = body_params['sleep_quality'].upper()
         

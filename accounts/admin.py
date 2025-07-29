@@ -31,7 +31,7 @@ class AccountAdmin(UserAdmin):
 
 
 class UserProfileAdmin(admin.ModelAdmin):
-    list_display = ("user", "name", "gender", "DOB", "phone_number", "profession", "city") # Updated for UserProfile fields
+    list_display = ("id", "user", "name", "gender", "DOB", "phone_number", "profession", "city") # Updated for UserProfile fields
     search_fields = ("user__email", "user__username", "name", "city", "profession")
 
 

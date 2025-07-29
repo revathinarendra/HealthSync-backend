@@ -15,3 +15,4 @@ django-rest-framework-mongoengine
 dnspython
 google-generative-ai
 pdfplumber
+boto3
