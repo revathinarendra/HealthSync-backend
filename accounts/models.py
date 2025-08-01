@@ -67,6 +67,11 @@ class Account(AbstractBaseUser):
 
     email = models.EmailField(verbose_name='email', max_length=100, unique=True)
     username = models.CharField(max_length=50, unique=True)
+    gender = models.CharField(blank=True, null=True, max_length=100)
+    DOB = models.DateField(blank=True, null=True)
+    phone_number = models.CharField(blank=True, null=True, max_length=10)
+    profession = models.CharField(blank=True, null=True, max_length=100)
+    location = models.CharField(blank=True, null=True, max_length=100)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='customer')
     date_joined = models.DateTimeField(auto_now_add=True)
     last_login = models.DateTimeField(auto_now_add=True)
@@ -126,7 +131,7 @@ class UserProfile(models.Model):
     Uses a OneToOneField to link directly to an Account.
     """
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="userprofile")
-    name = models.CharField(blank=True, null=True, max_length=100)
+    name = models.CharField(max_length=100, blank=True, null=True)
     gender = models.CharField(blank=True, null=True, max_length=100)
     DOB = models.DateField(blank=True, null=True)
     phone_number = models.CharField(blank=True, null=True, max_length=15)

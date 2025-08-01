@@ -637,67 +637,50 @@ def add_to_cart_create(request):
 
 
 
-# ######## CART VIEW ######
 @api_view(['POST'])
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated])
 def add_item_to_cart(request):
-    user_id = request.user.id
+    user_id = request.data.get('user_id', request.user.id)  # Use authenticated user ID if not provided
     test_id = request.data.get('test_id')
     quantity = request.data.get('quantity', 1)
-
     if not test_id:
         return Response({"detail": "Test ID is required."}, status=status.HTTP_400_BAD_REQUEST)
-
-    if not isinstance(quantity, int) or quantity <= 0:
+    
+    if not isinstance(quantity, int) or quantity<=0:
         return Response({"detail": "Quantity must be a positive integer."}, status=status.HTTP_400_BAD_REQUEST)
-
-    # Fetch test
+    
     try:
-        test_obj = Test.objects.get(id=test_id)
+        test_obj= Test.objects.get(id=test_id)
     except Test.DoesNotExist:
         return Response({"detail": "Test not found."}, status=status.HTTP_404_NOT_FOUND)
-    except Exception as e:
-        return Response({"detail": f"Error retrieving test: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-    # Fetch or create cart
+    
     try:
-        cart = Cart.objects(user_id=user_id).first()
-        if not cart:
-            cart = Cart(user_id=user_id, items=[])
+        cart= Cart.objects(user_id=user_id).first()
     except Exception as e:
-        return Response({"detail": f"Error retrieving or creating cart: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({"detail": "Error retrieving cart."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
 
-    # Check if item already in cart
-    cart_item_found = None
+    cart_item_found= None
     for item in cart.items:
-        if str(item.test.id) == str(test_id):  # Safely compare ObjectId and str
-            cart_item_found = item
+        if item.test.id == test_id:
+            cart_item_found= item
             break
-
+    
     if cart_item_found:
-        cart_item_found.quantity += quantity
-    else:
-        try:
-            new_cart_item = CartItem(
-                test=test_obj,
-                testName=test_obj.testName,
-                parameterCount=test_obj.parametersCovered_count,
-                quantity=quantity,
-                
-            )
-        except AttributeError:
-            return Response({"detail": "Missing required fields in test object (e.g., price)."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        item.quantity+= quantity
 
+    else:
+        new_cart_item= CartItem(test=test_obj,testName=test_obj.testName, parameterCount=test_obj.parametersCovered_count, quantity=quantity)
         cart.items.append(new_cart_item)
 
-    # Save cart and return response
     try:
-        cart.save()  # Will trigger `clean()` to recalculate totals
-        serializer = CartSerializer(cart)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
+        cart.save()  # This will trigger the clean() method to recalculate totals
+        return Response({"detail": "Item added to cart successfully."}, status=status.HTTP_201_CREATED)
     except Exception as e:
-        return Response({"detail": f"Error saving cart: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({"detail": "Error saving cart."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
 
 
 @api_view(['GET'])

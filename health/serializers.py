@@ -230,7 +230,7 @@ class CartItemSerializer(serializers.EmbeddedDocumentSerializer):
 # Cart Serializer
 # -------------------------
 class CartSerializer(serializers.DocumentSerializer):
-    items = CartItemSerializer(required=False, many=True)
+    items = CartItemSerializer(required=False)
 
     class Meta:
         model = Cart
