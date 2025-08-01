@@ -209,7 +209,7 @@ class FAQSerializer(serializers.EmbeddedDocumentSerializer):
 class TestSerializer(serializers.DocumentSerializer):
     parametersCovered_list = ParameterSerializer(required=False)
     faqs = FAQSerializer(required=False)
-    category = CategorySerializer()
+    #category = CategorySerializer()
 
     class Meta:
         model = Test
@@ -220,7 +220,6 @@ class TestSerializer(serializers.DocumentSerializer):
 # CartItem (Embedded)
 # -------------------------
 class CartItemSerializer(serializers.EmbeddedDocumentSerializer):
-   
 
     class Meta:
         model = CartItem
@@ -228,13 +227,13 @@ class CartItemSerializer(serializers.EmbeddedDocumentSerializer):
 
 
 # -------------------------
-# AddToCart Serializer
+# Cart Serializer
 # -------------------------
-class AddToCartSerializer(serializers.DocumentSerializer):
+class CartSerializer(serializers.DocumentSerializer):
     items = CartItemSerializer(required=False, many=True)
 
     class Meta:
-        model = AddToCart
+        model = Cart
         fields = '__all__'
 
 class AppointmentSerializer(serializers.DocumentSerializer):
