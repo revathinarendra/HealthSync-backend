@@ -1,4 +1,5 @@
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
@@ -342,8 +343,7 @@ def create_liver_function_test(request):
     serializer = LiverFunctionTestSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
-        return Response({'message': 'Liver Function Test saved successfully.',
-         "data": serializer.data}, status=status.HTTP_201_CREATED)
+        return Response({'message': 'Liver Function Test saved successfully.',"data": serializer.data}, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -390,8 +390,7 @@ def create_medical_history(request):
     serializer = MedicalHistorySerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
-        return Response({'message': 'Medical History saved successfully.',
-         "data": serializer.data}, status=status.HTTP_201_CREATED)
+        return Response({'message': 'Medical History saved successfully.',"data": serializer.data}, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -439,8 +438,7 @@ def create_daily_routine(request):
     serializer = DailyRoutineSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
-        return Response({"message": "Daily routine saved successfully.",
-         "data": serializer.data}, status=status.HTTP_201_CREATED)
+        return Response({"message": "Daily routine saved successfully.","data": serializer.data}, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -516,3 +514,275 @@ def get_health_data_by_user(request, user_id):
         return Response({'success': True, 'data': serializer.data}, status=status.HTTP_200_OK)
     except Exception as e:
         return Response({'success': False, 'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+
+
+
+
+
+
+
+
+
+
+
+
+    
+##################test#######################
+from .serializers import TestSerializer
+@api_view(['POST'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated]) 
+def test_create(request):
+    serializer = TestSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated]) 
+def test_list(request):
+    tests = Test.objects.all()
+    serializer = TestSerializer(tests, many=True)
+    return Response(serializer.data)
+
+@api_view(['PUT'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+def test_update(request, pk):
+    try:
+        test = Test.objects.get(id=pk)
+    except Test.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    serializer = TestSerializer(test, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['DELETE'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+def test_delete(request, pk):
+    try:
+        test = Test.objects.get(id=pk)
+    except Test.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    test.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+###############category#######################
+from .serializers import CategorySerializer
+@api_view(['POST'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated]) 
+def category_create(request):
+    serializer = CategorySerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+def category_list(request):
+    categories = Category.objects.all()
+    serializer = CategorySerializer(categories, many=True)
+    return Response(serializer.data)
+
+@api_view(['PUT'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+def category_update(request, pk):
+    try:
+        category = Category.objects.get(id=pk)
+    except Category.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    serializer = CategorySerializer(category, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['DELETE'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+def category_delete(request, pk):
+    try:
+        category = Category.objects.get(id=pk)
+    except Category.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    category.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+#####################cart#######################
+from .serializers import CartSerializer
+
+@api_view(['POST'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+def add_to_cart_create(request):
+    serializer = CartSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()#either updates or creates a new cart
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+@api_view(['POST'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+def add_item_to_cart(request):
+    user_id = request.data.get('user_id', request.user.id)  # Use authenticated user ID if not provided
+    test_id = request.data.get('test_id')
+    quantity = request.data.get('quantity', 1)
+    if not test_id:
+        return Response({"detail": "Test ID is required."}, status=status.HTTP_400_BAD_REQUEST)
+    
+    if not isinstance(quantity, int) or quantity<=0:
+        return Response({"detail": "Quantity must be a positive integer."}, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        test_obj= Test.objects.get(id=test_id)
+    except Test.DoesNotExist:
+        return Response({"detail": "Test not found."}, status=status.HTTP_404_NOT_FOUND)
+    
+    try:
+        cart= Cart.objects(user_id=user_id).first()
+    except Exception as e:
+        return Response({"detail": "Error retrieving cart."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+
+    cart_item_found= None
+    for item in cart.items:
+        if item.test.id == test_id:
+            cart_item_found= item
+            break
+    
+    if cart_item_found:
+        item.quantity+= quantity
+
+    else:
+        new_cart_item= CartItem(test=test_obj,testName=test_obj.testName, parameterCount=test_obj.parametersCovered_count, quantity=quantity)
+        cart.items.append(new_cart_item)
+
+    try:
+        
+        cart.save()  # This will trigger the clean() method to recalculate totals
+        return Response({"detail": "Item added to cart successfully."}, status=status.HTTP_201_CREATED)
+    except Exception as e:
+        return Response({"detail": "Error saving cart."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+
+
+@api_view(['GET'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+def add_to_cart_list(request):
+    carts=Cart.objects.filter(user_id=request.user.id)
+    serializer= CartSerializer(carts, many=True)
+    return Response(serializer.data)
+
+
+@api_view(['PUT'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+def add_to_cart_update(request, pk):
+    try:
+        # Ensure only the authenticated user's cart can be updated
+        cart = Cart.objects.get(id=pk, user_id=request.user.id)
+    except Cart.DoesNotExist:
+        return Response({"detail": "Cart not found or you don't have permission."}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = CartSerializer(cart, data=request.data, partial=True)
+    if serializer.is_valid():
+        # Ensure user_id cannot be changed during update
+        if 'user_id' in serializer.validated_data and serializer.validated_data['user_id'] != request.user.id:
+            return Response({"detail": "Cannot change user_id of a cart."}, status=status.HTTP_400_BAD_REQUEST)
+        serializer.save() # Cart's clean method should update totals
+        return Response(serializer.data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['DELETE'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated]) # Authentication restored
+def add_to_cart_delete(request,pk):
+    try:
+        cart=Cart.objects.get(user_id=request.user.id)
+    except Cart.DoesNotExist:
+        return Response({"detail": "Cart not found or you don't have permission."}, status=status.HTTP_404_NOT_FOUND)
+    
+    cart.delete()
+    return Response({"detail": "Cart deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+
+
+
+
+
+@api_view(['POST']) # Using POST for state change, or DELETE if you pass item_id in URL
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated]) # Authentication restored
+def remove_item_from_cart(request):
+    """
+    Removes a specified Test from the authenticated user's cart, or decreases its quantity.
+    Expected request.data: {"test_id": "test_mongo_object_id", "quantity": 1 (optional)}
+    If quantity is not provided, removes entire item.
+    User ID is inferred from the authenticated user.
+    """
+    user_id = request.user.id # Get user ID from authenticated user
+
+    test_id_to_remove = request.data.get('test_id')
+    quantity_to_remove = request.data.get('quantity') # Optional: if not provided, remove all
+
+    if not test_id_to_remove:
+        return Response({"detail": "test_id is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+    if quantity_to_remove is not None and (not isinstance(quantity_to_remove, int) or quantity_to_remove <= 0):
+        return Response({"detail": "Quantity to remove must be a positive integer or omitted."}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        # Get the user's cart
+        cart = Cart.objects.get(user_id=user_id)
+    except Cart.DoesNotExist:
+        return Response({"detail": "Cart not found for this user."}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e: # Catch potential errors if test_id is not a valid ObjectId for filtering
+        return Response({"detail": f"Error retrieving cart: {e}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    # Find the cart item to remove/update
+    item_index_to_remove = -1
+    for i, item in enumerate(cart.items):
+        if str(item.test.id) == test_id_to_remove: # Convert ObjectId to string for comparison
+            item_index_to_remove = i
+            break
+
+    if item_index_to_remove == -1:
+        return Response({"detail": "Test not found in cart."}, status=status.HTTP_404_NOT_FOUND)
+
+    cart_item = cart.items[item_index_to_remove]
+
+    if quantity_to_remove is not None and quantity_to_remove > 0 and cart_item.quantity > quantity_to_remove:
+        # Decrease quantity
+        cart_item.quantity -= quantity_to_remove
+    else:
+        # Remove the entire item
+        cart.items.pop(item_index_to_remove)
+
+    try:
+        cart.save() # This will trigger the clean() method to recalculate totals
+        serializer = CartSerializer(cart)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({"detail": f"Error saving cart: {e}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+
+

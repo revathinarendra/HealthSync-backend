@@ -1,6 +1,6 @@
 import datetime 
 from django.db import models
-from mongoengine import Document, EmbeddedDocument,ReferenceField,StringField, FloatField, DateTimeField, EmbeddedDocumentField, ObjectIdField,IntField, DictField,BooleanField
+from mongoengine import Document, EmbeddedDocument,ReferenceField,StringField, FloatField, DateTimeField, EmbeddedDocumentField, ObjectIdField,IntField, DictField,BooleanField, ListField, EmbeddedDocumentListField
 from accounts.models import Account, UserProfile
 from bson import ObjectId
 
@@ -319,6 +319,7 @@ class FAQ(EmbeddedDocument):
 # -------------------------
 # Test Model
 # -------------------------
+
 class Test(Document):
     testName = StringField(required=True)
     testCode = StringField
@@ -336,12 +337,12 @@ class Test(Document):
     preparations = StringField()
     resultInterpretation = StringField()
 
-    parametersCovered_count = IntField(default=0)
+    parametersCovered_count = IntField(default=0) 
     parametersCovered_list = EmbeddedDocumentField(Parameter)
 
     faqs = EmbeddedDocumentField(FAQ)
 
-    category = ReferenceField(Category, required=True)
+    category = ReferenceField(Category, required=False)
 
     created_at = DateTimeField(default=datetime.datetime.utcnow)
     updated_at = DateTimeField(default=datetime.datetime.utcnow)
@@ -354,17 +355,17 @@ class Test(Document):
 # -------------------------
 class CartItem(EmbeddedDocument):
     test = ReferenceField(Test, required=True)
-    testName = StringField
-    parameterCount = IntField
+    testName = StringField()
+    parameterCount = IntField()
     quantity = IntField(default=1)
 
 
 # -------------------------
-# AddToCart Model
+# Cart Model
 # -------------------------
-class AddToCart(Document):
+class Cart(Document):
     user_id = IntField(required=True)
-    items = EmbeddedDocumentField(CartItem)
+    items = ListField(EmbeddedDocumentField(CartItem))
 
     subTotal = FloatField(default=0)
     total = FloatField(default=0)
@@ -376,9 +377,12 @@ class AddToCart(Document):
 
     def clean(self):
         """Auto-calculate totals before saving"""
-        self.subTotal = sum(item.price * item.quantity for item in self.items)
-        self.total = self.subTotal
-        self.netPayableAmount = self.total  # Can apply discounts/coupons later
+        try:
+            self.subTotal = sum(item.price * item.quantity for item in self.items)
+            self.total = self.subTotal
+            self.netPayableAmount = self.total  # Can apply discounts/coupons later
+        except Exception as e:
+            raise ValueError(f"Error calculating totals: {str(e)}")
 
 # -------------------------
 # Appointment Model
