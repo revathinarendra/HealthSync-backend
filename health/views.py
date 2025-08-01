@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from .models import *
 from datetime import datetime
 from utils.health_score import calculate_health_score
+from mongoengine.errors import DoesNotExist as RefDoesNotExist
 
 # from .models import BodyParameters, BloodTestValues
 from .serializers import BodyParametersSerializer, BloodTestValuesSerializer,CompleteUrineExaminationSerializer, ErythrocyteSedimentationRateSerializer, BloodUreaNitrogenTestSerializer,LipidProfileSerializer,LiverFunctionTestSerializer,MedicalHistorySerializer,DailyRoutineSerializer
@@ -521,12 +522,6 @@ def get_health_data_by_user(request, user_id):
 
 
 
-
-
-
-
-
-
     
 ##################test#######################
 from .serializers import TestSerializer
@@ -637,6 +632,9 @@ def add_to_cart_create(request):
 
 
 
+# # ######## CART VIEW ######
+
+
 @api_view(['POST'])
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated])
@@ -658,30 +656,53 @@ def add_item_to_cart(request):
     try:
         cart= Cart.objects(user_id=user_id).first()
     except Exception as e:
-        return Response({"detail": "Error retrieving cart."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
+        return Response({"detail": f"Error retrieving or creating cart: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    cart_item_found= None
+    # Remove any broken references in cart before processing
+    valid_items = []
     for item in cart.items:
-        if item.test.id == test_id:
-            cart_item_found= item
-            break
-    
+        try:
+            _ = item.test.id  # Triggers dereference
+            valid_items.append(item)
+        except RefDoesNotExist:
+            continue
+    cart.items = valid_items
+
+    # Check if item already in cart
+    cart_item_found = None
+    for item in cart.items:
+        try:
+            if str(item.test.id) == str(test_id):  # Safely compare ObjectId and str
+                cart_item_found = item
+                break
+        except RefDoesNotExist:
+            continue
+        except Exception as e:
+            return Response({"detail": f"Error reading cart item test reference: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     if cart_item_found:
         item.quantity+= quantity
 
     else:
-        new_cart_item= CartItem(test=test_obj,testName=test_obj.testName, parameterCount=test_obj.parametersCovered_count, quantity=quantity)
+        try:
+            new_cart_item = CartItem(
+                test=test_obj,
+                testName=test_obj.testName,
+                parameterCount=test_obj.parametersCovered_count,
+                quantity=quantity,
+            )
+        except AttributeError:
+            return Response({"detail": "Missing required fields in test object."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
         cart.items.append(new_cart_item)
 
     try:
-        
-        cart.save()  # This will trigger the clean() method to recalculate totals
-        return Response({"detail": "Item added to cart successfully."}, status=status.HTTP_201_CREATED)
+        cart.save()  # Will trigger `clean()` safely now
+        serializer = CartSerializer(cart)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
     except Exception as e:
         return Response({"detail": "Error saving cart."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
-
 
 @api_view(['GET'])
 @authentication_classes([JWTAuthentication])
