@@ -639,22 +639,29 @@ def add_to_cart_create(request):
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated])
 def add_item_to_cart(request):
-    user_id = request.data.get('user_id', request.user.id)  # Use authenticated user ID if not provided
+    user_id = request.user.id
     test_id = request.data.get('test_id')
     quantity = request.data.get('quantity', 1)
+
     if not test_id:
         return Response({"detail": "Test ID is required."}, status=status.HTTP_400_BAD_REQUEST)
-    
-    if not isinstance(quantity, int) or quantity<=0:
+
+    if not isinstance(quantity, int) or quantity <= 0:
         return Response({"detail": "Quantity must be a positive integer."}, status=status.HTTP_400_BAD_REQUEST)
-    
+
+    # Fetch test
     try:
-        test_obj= Test.objects.get(id=test_id)
+        test_obj = Test.objects.get(id=test_id)
     except Test.DoesNotExist:
         return Response({"detail": "Test not found."}, status=status.HTTP_404_NOT_FOUND)
-    
+    except Exception as e:
+        return Response({"detail": f"Error retrieving test: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    # Fetch or create cart
     try:
-        cart= Cart.objects(user_id=user_id).first()
+        cart = Cart.objects(user_id=user_id).first()
+        if not cart:
+            cart = Cart(user_id=user_id, items=[])
     except Exception as e:
         return Response({"detail": f"Error retrieving or creating cart: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -681,8 +688,7 @@ def add_item_to_cart(request):
             return Response({"detail": f"Error reading cart item test reference: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     if cart_item_found:
-        item.quantity+= quantity
-
+        cart_item_found.quantity += quantity
     else:
         try:
             new_cart_item = CartItem(
@@ -696,13 +702,13 @@ def add_item_to_cart(request):
 
         cart.items.append(new_cart_item)
 
+    # Save cart and return response
     try:
         cart.save()  # Will trigger `clean()` safely now
         serializer = CartSerializer(cart)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     except Exception as e:
-        return Response({"detail": "Error saving cart."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
+        return Response({"detail": f"Error saving cart: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
 @authentication_classes([JWTAuthentication])
@@ -803,7 +809,3 @@ def remove_item_from_cart(request):
         return Response(serializer.data, status=status.HTTP_200_OK)
     except Exception as e:
         return Response({"detail": f"Error saving cart: {e}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-
-

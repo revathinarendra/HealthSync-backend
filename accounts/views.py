@@ -124,9 +124,9 @@ def get_user_profile_name_by_id(request):
             status=status.HTTP_400_BAD_REQUEST
         )
     try:
-        user_profile = UserProfile.objects.get(id=profile_id)
-        return Response({"name": user_profile.name}, status=status.HTTP_200_OK)
-    except UserProfile.DoesNotExist:
+        user_profile = Account.objects.get(id=profile_id)
+        return Response({"name": user_profile.username, "gender": user_profile.gender, "last_visit": user_profile.last_login}, status=status.HTTP_200_OK)
+    except Account.DoesNotExist:
         return Response({"detail": "User profile not found."}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e: 
         return Response({"detail": f"An unexpected error occurred: {e}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

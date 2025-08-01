@@ -32,7 +32,7 @@ class AccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = Account
         # Include 'dietician_id' in fields if it's meant to be serialized
-        fields = ["dietician_id", "id", "email", "username", "role", "password", "date_joined", "last_login", "is_admin", "is_staff", "is_active", "is_superadmin"]
+        fields = ["dietician_id", "id", "email", "username", "role", "password", "date_joined", "last_login", "is_admin", "is_staff", "is_active", "is_superadmin", "gender", "DOB", "phone_number", "profession", "location"]
         read_only_fields = ["id", "date_joined", "last_login", "is_admin", "is_staff", "is_active", "is_superadmin", "dietician_id"]
 
     def create(self, validated_data):
@@ -40,6 +40,11 @@ class AccountSerializer(serializers.ModelSerializer):
         username = validated_data.pop('username')
         email = validated_data.pop('email')       
         role = validated_data.pop('role', 'customer') 
+        DOB = validated_data.pop('DOB', None)
+        profession = validated_data.pop('profession', None)
+        location = validated_data.pop('location', None)
+        phone_number = validated_data.pop('phone_number', None)
+        gender = validated_data.pop('gender', None)
         is_superadmin_val = validated_data.pop('is_superadmin', False)
 
         if not username:
@@ -69,6 +74,11 @@ class AccountSerializer(serializers.ModelSerializer):
             username=username,  
             password=password,
             role=role,
+            DOB=DOB,
+            profession=profession,
+            location=location,
+            phone_number=phone_number,
+            gender=gender,
             is_active=is_active_status, 
             is_staff=is_staff_status,   
             is_admin=is_admin_status,   

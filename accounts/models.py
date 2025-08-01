@@ -66,13 +66,13 @@ class Account(AbstractBaseUser):
     )
 
     email = models.EmailField(verbose_name='email', max_length=100, unique=True)
-    username = models.CharField(max_length=50, unique=True)
+    username = models.CharField(max_length=50, unique=True, null=False)
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='customer')
     gender = models.CharField(blank=True, null=True, max_length=100)
     DOB = models.DateField(blank=True, null=True)
-    phone_number = models.CharField(blank=True, null=True, max_length=10)
+    phone_number = models.CharField(blank=True, null=True, max_length=15)
     profession = models.CharField(blank=True, null=True, max_length=100)
     location = models.CharField(blank=True, null=True, max_length=100)
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='customer')
     date_joined = models.DateTimeField(auto_now_add=True)
     last_login = models.DateTimeField(auto_now_add=True)
     is_admin = models.BooleanField(default=False)
@@ -131,7 +131,7 @@ class UserProfile(models.Model):
     Uses a OneToOneField to link directly to an Account.
     """
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="userprofile")
-    name = models.CharField(max_length=100, blank=True, null=True)
+    name = models.CharField(blank=True, null=True, max_length=100)
     gender = models.CharField(blank=True, null=True, max_length=100)
     DOB = models.DateField(blank=True, null=True)
     phone_number = models.CharField(blank=True, null=True, max_length=15)
@@ -150,9 +150,25 @@ class UserProfile(models.Model):
 def create_user_profile(sender, instance, created, **kwargs):
     """
     Signal receiver to automatically create a UserProfile whenever a new Account is created.
+    Also copies data from the Account instance to the new UserProfile.
     """
     if created:
-        UserProfile.objects.create(user=instance)
+        # Create a new UserProfile instance
+        user_profile = UserProfile.objects.create(user=instance)
+
+        # Copy data from Account to UserProfile
+        user_profile.name = instance.username  # Default to username if name is not set
+        user_profile.DOB = instance.DOB
+        user_profile.gender = instance.gender
+        user_profile.phone_number = instance.phone_number
+        user_profile.profession = instance.profession
+
+        # Copy the 'location' from Account to the 'city' field in UserProfile
+        user_profile.city = instance.location
+
+        # Save the updated UserProfile instance
+        user_profile.save()
+
 
 
 # --- Password Reset OTP Model ---

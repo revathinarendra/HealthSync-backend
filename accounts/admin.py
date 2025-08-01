@@ -7,7 +7,7 @@ from .models import Account, UserProfile
 
 from .models import PasswordResetOTP, Cities, Professions
 class AccountAdmin(UserAdmin):
-    list_display = ( "dietician_id","id", "email", "username", "role","date_joined", "last_login", "is_admin", "is_staff","profession", "gender", "DOB", "phone_number","location") # CORRECTED: Added id and created_by
+    list_display = ( "dietician_id","id", "email", "username", "role","date_joined", "last_login", "is_admin", "is_staff","DOB","gender","phone_number","profession","location",) # CORRECTED: Added id and created_by
     search_fields = ("email", "username")
     readonly_fields = ("date_joined", "last_login")
 
