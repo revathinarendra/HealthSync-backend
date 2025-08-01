@@ -809,7 +809,3 @@ def remove_item_from_cart(request):
         return Response(serializer.data, status=status.HTTP_200_OK)
     except Exception as e:
         return Response({"detail": f"Error saving cart: {e}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-
-
