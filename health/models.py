@@ -338,7 +338,9 @@ class Test(Document):
     resultInterpretation = StringField()
 
     parametersCovered_count = IntField(default=0) 
-    parametersCovered_list = EmbeddedDocumentField(Parameter)
+    #parametersCovered_list = EmbeddedDocumentField(Parameter)
+    parametersCovered_list = ListField(EmbeddedDocumentField(Parameter))
+
 
     faqs = ListField(EmbeddedDocumentField(FAQ))
 

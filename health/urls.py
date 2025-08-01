@@ -70,6 +70,7 @@ urlpatterns = [
 #####cart#######
     path('cart/create/', views.add_to_cart_create, name='create_cart'),
     path('cart/add-item/', views.add_item_to_cart, name='add_item_to_cart'),
+    path('cart/list/', views.add_to_cart_list, name='add-to-cart-list'),
     path('cart/remove-item/<str:item_id>/', views.remove_item_from_cart, name='remove_item_from_cart'),
 
 ########test#######

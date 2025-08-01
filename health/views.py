@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from .models import *
 from datetime import datetime
 from utils.health_score import calculate_health_score
+from mongoengine.errors import DoesNotExist as RefDoesNotExist
 
 # from .models import BodyParameters, BloodTestValues
 from .serializers import BodyParametersSerializer, BloodTestValuesSerializer,CompleteUrineExaminationSerializer, ErythrocyteSedimentationRateSerializer, BloodUreaNitrogenTestSerializer,LipidProfileSerializer,LiverFunctionTestSerializer,MedicalHistorySerializer,DailyRoutineSerializer
@@ -521,12 +522,6 @@ def get_health_data_by_user(request, user_id):
 
 
 
-
-
-
-
-
-
     
 ##################test#######################
 from .serializers import TestSerializer
@@ -637,7 +632,9 @@ def add_to_cart_create(request):
 
 
 
-# ######## CART VIEW ######
+# # ######## CART VIEW ######
+
+
 @api_view(['POST'])
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated])
@@ -668,12 +665,27 @@ def add_item_to_cart(request):
     except Exception as e:
         return Response({"detail": f"Error retrieving or creating cart: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+    # Remove any broken references in cart before processing
+    valid_items = []
+    for item in cart.items:
+        try:
+            _ = item.test.id  # Triggers dereference
+            valid_items.append(item)
+        except RefDoesNotExist:
+            continue
+    cart.items = valid_items
+
     # Check if item already in cart
     cart_item_found = None
     for item in cart.items:
-        if str(item.test.id) == str(test_id):  # Safely compare ObjectId and str
-            cart_item_found = item
-            break
+        try:
+            if str(item.test.id) == str(test_id):  # Safely compare ObjectId and str
+                cart_item_found = item
+                break
+        except RefDoesNotExist:
+            continue
+        except Exception as e:
+            return Response({"detail": f"Error reading cart item test reference: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     if cart_item_found:
         cart_item_found.quantity += quantity
@@ -684,21 +696,19 @@ def add_item_to_cart(request):
                 testName=test_obj.testName,
                 parameterCount=test_obj.parametersCovered_count,
                 quantity=quantity,
-                
             )
         except AttributeError:
-            return Response({"detail": "Missing required fields in test object (e.g., price)."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({"detail": "Missing required fields in test object."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         cart.items.append(new_cart_item)
 
     # Save cart and return response
     try:
-        cart.save()  # Will trigger `clean()` to recalculate totals
+        cart.save()  # Will trigger `clean()` safely now
         serializer = CartSerializer(cart)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     except Exception as e:
         return Response({"detail": f"Error saving cart: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 
 @api_view(['GET'])
 @authentication_classes([JWTAuthentication])

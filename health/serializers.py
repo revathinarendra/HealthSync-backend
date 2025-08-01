@@ -206,15 +206,31 @@ class FAQSerializer(serializers.EmbeddedDocumentSerializer):
 # -------------------------
 # Test Serializer
 # -------------------------
+
+
+from .models import Parameter, FAQ
+
 class TestSerializer(serializers.DocumentSerializer):
-    parametersCovered_list = ParameterSerializer(required=False)
-    faqs = FAQSerializer(required=False,many=True)
-    #category = CategorySerializer()
+    parametersCovered_list = ParameterSerializer(required=False, many=True)
+    faqs = FAQSerializer(required=False, many=True)
 
     class Meta:
         model = Test
         fields = '__all__'
 
+    def create(self, validated_data):
+        parameters_data = validated_data.pop('parametersCovered_list', [])
+        faqs_data = validated_data.pop('faqs', [])
+
+        # Convert dicts to embedded documents
+        parameters_objs = [Parameter(**p) for p in parameters_data]
+        faqs_objs = [FAQ(**f) for f in faqs_data]
+
+        test = Test(**validated_data)
+        test.parametersCovered_list = parameters_objs
+        test.faqs = faqs_objs
+        test.save()
+        return test
 
 # -------------------------
 # CartItem (Embedded)

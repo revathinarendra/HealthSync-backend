@@ -54,7 +54,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 
 DEBUG = True
 # DEBUG = os.environ.get('DEBUG') == 'False'
-ALLOWED_HOSTS = ['.vercel.app', 'localhost', '127.0.0.1','*']
+ALLOWED_HOSTS = ['.vercel.app', 'localhost', '127.0.0.1','*','13.127.202.85']
 
 
 MONGO_DB_NAME = os.getenv('MONGO_DB_NAME')
@@ -178,7 +178,8 @@ CORS_ALLOWED_ORIGINS = [
     'https://health-sync-sigma.vercel.app',
     'https://nucleux.vercel.app',
     'http://localhost:3000',
-    'http://127.0.0.1:3000'
+    'http://127.0.0.1:3000',
+    'https://13.127.202.85'
 ]
 CORS_ALLOW_METHODS = [
     'GET',
