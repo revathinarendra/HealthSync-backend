@@ -173,15 +173,17 @@ def list_accounts(request):
             try:
                 dietician_id_param = int(dietician_id_param)
                 accounts = accounts.filter(dietician_id=dietician_id_param)
+                count = accounts.count()
             except ValueError:
                 return Response({'error': 'Invalid dietician_id provided. Must be an integer.'}, status=status.HTTP_400_BAD_REQUEST)
     elif user.role == 'dietitian':
         accounts = accounts.filter(dietician_id=user.id)
+        count = accounts.count()
     else:
         return Response({'error': 'You do not have permission to view accounts.'}, status=status.HTTP_403_FORBIDDEN)
 
     serializer = AccountSerializer(accounts, many=True)
-    return Response(serializer.data, status=status.HTTP_200_OK)
+    return Response({"total_accounts": count, "results": serializer.data}, status=status.HTTP_200_OK)
 
 
 # --- NEW: Request Password Reset OTP API ---
