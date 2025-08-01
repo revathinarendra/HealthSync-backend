@@ -340,7 +340,7 @@ class Test(Document):
     parametersCovered_count = IntField(default=0) 
     parametersCovered_list = EmbeddedDocumentField(Parameter)
 
-    faqs = EmbeddedDocumentField(FAQ)
+    faqs = ListField(EmbeddedDocumentField(FAQ))
 
     category = ReferenceField(Category, required=False)
 
@@ -378,11 +378,12 @@ class Cart(Document):
     def clean(self):
         """Auto-calculate totals before saving"""
         try:
-            self.subTotal = sum(item.price * item.quantity for item in self.items)
+            self.subTotal = sum(item.test.price * item.quantity for item in self.items)
             self.total = self.subTotal
             self.netPayableAmount = self.total  # Can apply discounts/coupons later
         except Exception as e:
             raise ValueError(f"Error calculating totals: {str(e)}")
+
 
 # -------------------------
 # Appointment Model

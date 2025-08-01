@@ -208,7 +208,7 @@ class FAQSerializer(serializers.EmbeddedDocumentSerializer):
 # -------------------------
 class TestSerializer(serializers.DocumentSerializer):
     parametersCovered_list = ParameterSerializer(required=False)
-    faqs = FAQSerializer(required=False)
+    faqs = FAQSerializer(required=False,many=True)
     #category = CategorySerializer()
 
     class Meta:
