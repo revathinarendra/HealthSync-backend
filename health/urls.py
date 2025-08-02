@@ -3,6 +3,7 @@ from . import views
 
 urlpatterns = [
     path('body-parameters/', views.list_body_parameters),
+    path('body-parameters/dashBoard', views.list_user_body_summary),
     path('body-parameters/create/',views.create_body_parameters),
     path('body-parameters/<str:pk>/',views.update_body_parameters),
     path('body-parameters/delete/<str:pk>/', views.delete_body_parameters, name='delete_body_parameters'),
