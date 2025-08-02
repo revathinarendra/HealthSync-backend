@@ -12,7 +12,7 @@ def fetch_user_profile_by_id(profile_id):
             "name": user_profile.username,
             "DOB":user_profile.DOB,
             "gender": user_profile.gender,
-            "last_visit": user_profile.last_login
+            # "last_visit": user_profile.last_login
         }
     except Account.DoesNotExist:
         return {"error": "User profile not found."}

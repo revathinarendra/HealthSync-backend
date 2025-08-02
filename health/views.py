@@ -61,19 +61,24 @@ def create_body_parameters(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_user_body_summary(request):
-    body_params = BodyParameters.objects.all()
+    all_params = BodyParameters.objects.order_by('-created_at')  # or '-id' as fallback
+    latest_per_user = {}
+    
+    for param in all_params:
+        user_id = str(param.user_id)
+        if user_id not in latest_per_user:
+            latest_per_user[user_id] = param
+
     results = []
-
-    for param in body_params:
-        user_id = getattr(param, 'user_id', None)  
+    for user_id, param in latest_per_user.items():
         user_profile = fetch_user_profile_by_id(user_id)
-
         results.append({
             "userId": user_id,
             "userProfile": user_profile,
-            "bmi": getattr(param, 'bmi', None),
-            "score": getattr(param, 'score', None),
-            "status": getattr(param, 'status', None)
+            "bmi": param.bmi,
+            "score": param.score,
+            "status": param.status,
+            "last_visit": param.created_at
         })
 
     return Response(results, status=status.HTTP_200_OK)
