@@ -15,6 +15,8 @@ urlpatterns = [
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('admin/', admin.site.urls),
     path('', views.home, name='home'),
+    # Health check for all apps
+    path('health/', views.HealthCheckView.as_view(), name='global_health_check'),  
     path('api/', include('accounts.urls')),  # Ensure 'accounts.urls' exists
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
