@@ -6,6 +6,8 @@ from rest_framework.permissions import IsAuthenticated
 from .models import *
 from datetime import datetime
 from utils.health_score import calculate_health_score
+from utils.user_utils import fetch_user_profile_by_id
+
 from mongoengine.errors import DoesNotExist as RefDoesNotExist
 
 # from .models import BodyParameters, BloodTestValues
@@ -56,7 +58,25 @@ def create_body_parameters(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_user_body_summary(request):
+    body_params = BodyParameters.objects.all()
+    results = []
 
+    for param in body_params:
+        user_id = getattr(param, 'user_id', None)  
+        user_profile = fetch_user_profile_by_id(user_id)
+
+        results.append({
+            "userId": user_id,
+            "userProfile": user_profile,
+            "bmi": getattr(param, 'bmi', None),
+            "score": getattr(param, 'score', None),
+            "status": getattr(param, 'status', None)
+        })
+
+    return Response(results, status=status.HTTP_200_OK)
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_body_parameters(request):
@@ -539,7 +559,7 @@ def test_create(request):
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated]) 
 def test_list(request):
-    tests = Test.objects.all()
+    tests = Test.objects.all() 
     serializer = TestSerializer(tests, many=True)
     return Response(serializer.data)
 
