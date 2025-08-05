@@ -98,6 +98,19 @@ def get_body_parameters_by_user(request, user_id):
     serializer = BodyParametersSerializer(body_params, many=True)
     return Response(serializer.data, status=200)
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_body_parameters_by_user_latest_record(request, user_id):
+    print("Called with user_id:", user_id)
+
+    # Get the latest body parameter record for the user
+    latest_record = BodyParameters.objects.filter(user_id=user_id).order_by('-created_at').first()
+
+    if not latest_record:
+        return Response({"message": "No body parameter record found for this user."}, status=404)
+
+    serializer = BodyParametersSerializer(latest_record)
+    return Response(serializer.data, status=200)
 
 
 @api_view(['PUT'])
