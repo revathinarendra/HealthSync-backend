@@ -238,8 +238,12 @@ def verify_otp(request):
 # --- NEW: Reset Password Confirm API ---
 @api_view(['POST'])
 def reset_password_confirm(request):
+    """
+    Allows a user to reset their password with just an email, without OTP verification.
+    This is a significant security change from the previous implementation.
+    """
     serializer = ResetPasswordConfirmSerializer(data=request.data)
     if serializer.is_valid():
-        user = serializer.save() # This method also marks OTP as used
+        user = serializer.save() # This method now only saves the new password
         return Response({'message': 'Password reset successfully. You can now log in with your new password.'}, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
