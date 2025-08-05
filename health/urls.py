@@ -8,6 +8,7 @@ urlpatterns = [
     path('body-parameters/<str:pk>/',views.update_body_parameters),
     path('body-parameters/delete/<str:pk>/', views.delete_body_parameters, name='delete_body_parameters'),
     path('body-parameters/byUser/<str:user_id>/', views.get_body_parameters_by_user, name='get_body_parameters_by_user'),
+    path('body-parameters/user-latest-record/<str:user_id>/', views.get_body_parameters_by_user_latest_record, name='get_body_parameters_by_user_latest_record'),
 
 
 
