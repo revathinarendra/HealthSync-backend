@@ -154,42 +154,48 @@ class VerifyOTPSerializer(serializers.Serializer):
 
 # --- NEW: Serializer for resetting password after OTP verification ---
 class ResetPasswordConfirmSerializer(serializers.Serializer):
-    #email = serializers.EmailField(required=True)
-    #otp = serializers.CharField(required=True, max_length=6)
+    """
+    Serializer for resetting a password directly without OTP verification.
+    WARNING: This bypasses a crucial security step. Use with caution.
+    """
+    email = serializers.EmailField(required=True)
     new_password = serializers.CharField(write_only=True, required=True, min_length=8)
     confirm_new_password = serializers.CharField(write_only=True, required=True, min_length=8)
 
     def validate(self, data):
+        # 1. Check if passwords match
         if data['new_password'] != data['confirm_new_password']:
             raise serializers.ValidationError({"new_password": "New passwords do not match."})
         
-        # Use the VerifyOTPSerializer's validation logic to verify email and OTP
-        verify_serializer = VerifyOTPSerializer(data={'email': data['email'], 'otp': data['otp']})
-        verify_serializer.is_valid(raise_exception=True) # Raise exception if OTP is invalid
-
-        user = verify_serializer.validated_data['user']
-        otp_instance = verify_serializer.validated_data['otp_instance']
-
+        email = data.get('email')
+        
+        # 2. Check if a user with the email exists
+        try:
+            user = Account.objects.get(email=email)
+        except Account.DoesNotExist:
+            raise serializers.ValidationError({"email": "No user found with this email address."})
+        
+        # 3. Validate password strength
         try:
             validate_password(data['new_password'], user=user)
         except DjangoValidationError as e:
             raise serializers.ValidationError({"new_password": list(e.messages)})
-
+        
         data['user'] = user
-        data['otp_instance'] = otp_instance
         return data
 
     def save(self):
         user = self.validated_data['user']
-        otp_instance = self.validated_data['otp_instance']
         new_password = self.validated_data['new_password']
 
         user.set_password(new_password)
-        user.is_active = True # Optionally activate user if they were inactive (e.g., first login)
+        user.is_active = True # Optionally activate the user
         user.save()
 
-        # Mark OTP as used
-        otp_instance.is_used = True
-        otp_instance.save()
+        # NOTE: OTP is no longer marked as used because we are bypassing it.
+        # Your PasswordResetOTP model will still contain old, unused OTPs.
 
         return user
+    
+
+    
