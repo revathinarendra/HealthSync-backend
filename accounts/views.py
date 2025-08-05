@@ -35,6 +35,18 @@ class ProfessionsListView(generics.ListAPIView):
     queryset = Professions.objects.filter(is_active=True)
     serializer_class = ProfessionSerializer
 
+
+from rest_framework.pagination import PageNumberPagination
+class AccountPagination(PageNumberPagination):
+    page_size = 6
+    max_page_size = 100 
+    page_size_query_param = 'page_size'
+    def get_paginated_response(self, data):
+        return Response({
+            'count': self.page.paginator.count,
+            'results': data 
+        })
+
 # --- Helper function to send OTP email ---
 def send_otp_email(email, otp_code):
     subject = 'Your Password Reset OTP'
@@ -178,12 +190,17 @@ def list_accounts(request):
                 return Response({'error': 'Invalid dietician_id provided. Must be an integer.'}, status=status.HTTP_400_BAD_REQUEST)
     elif user.role == 'dietitian':
         accounts = accounts.filter(dietician_id=user.id)
-        count = accounts.count()
+        #count = accounts.count()
     else:
         return Response({'error': 'You do not have permission to view accounts.'}, status=status.HTTP_403_FORBIDDEN)
 
-    serializer = AccountSerializer(accounts, many=True)
-    return Response({"total_accounts": count, "results": serializer.data}, status=status.HTTP_200_OK)
+
+    paginator = AccountPagination()
+    paginated_accounts = paginator.paginate_queryset(accounts, request)
+    serializer = AccountSerializer(paginated_accounts, many=True)
+    return paginator.get_paginated_response(serializer.data)
+
+    #return Response({"total_accounts": count, "results": serializer.data}, status=status.HTTP_200_OK)
 
 
 # --- NEW: Request Password Reset OTP API ---

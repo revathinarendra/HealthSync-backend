@@ -154,8 +154,8 @@ class VerifyOTPSerializer(serializers.Serializer):
 
 # --- NEW: Serializer for resetting password after OTP verification ---
 class ResetPasswordConfirmSerializer(serializers.Serializer):
-    email = serializers.EmailField(required=True)
-    otp = serializers.CharField(required=True, max_length=6)
+    #email = serializers.EmailField(required=True)
+    #otp = serializers.CharField(required=True, max_length=6)
     new_password = serializers.CharField(write_only=True, required=True, min_length=8)
     confirm_new_password = serializers.CharField(write_only=True, required=True, min_length=8)
 
