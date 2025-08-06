@@ -3,12 +3,14 @@ from . import views
 
 urlpatterns = [
     path('body-parameters/', views.list_body_parameters),
-    path('body-parameters/dashBoard/', views.list_user_body_summary),
+    path('body-parameters/clientDashBoard/<str:dietician_id>/', views.list_user_body_summary),
     path('body-parameters/create/',views.create_body_parameters),
     path('body-parameters/<str:pk>/',views.update_body_parameters),
     path('body-parameters/delete/<str:pk>/', views.delete_body_parameters, name='delete_body_parameters'),
     path('body-parameters/byUser/<str:user_id>/', views.get_body_parameters_by_user, name='get_body_parameters_by_user'),
     path('body-parameters/user-latest-record/<str:user_id>/', views.get_body_parameters_by_user_latest_record, name='get_body_parameters_by_user_latest_record'),
+
+
 
 
 
@@ -62,7 +64,10 @@ urlpatterns = [
     path('daily-routine/delete/<str:pk>/', views.delete_daily_routine),
 
 
+##################fetch  from all health models############
+    path('latest/<int:user_id>/', views.get_latest_health_data_by_user, name='get_latest_health_data_by_user'),
     path('byUserId/<int:user_id>/', views.get_health_data_by_user),
+   
 
 #####category#######
     path('category/create/', views.category_create, name='category_create'),

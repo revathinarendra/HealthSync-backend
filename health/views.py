@@ -6,7 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from .models import *
 from datetime import datetime
 from utils.health_score import calculate_health_score
-from utils.user_utils import fetch_user_profile_by_id
+from utils.user_utils import fetch_user_profile_by_id, dietician_clients_health_summary
 
 from mongoengine.errors import DoesNotExist as RefDoesNotExist
 
@@ -57,18 +57,18 @@ def create_body_parameters(request):
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def list_user_body_summary(request):
-    all_params = BodyParameters.objects.order_by('-created_at')  # or '-id' as fallback
+def list_user_body_summary(request, dietician_id):
+    all_params = BodyParameters.objects.filter(dietician_id=dietician_id).order_by('-created_at')
+    print("all_params",all_params)
     latest_per_user = {}
-    
     for param in all_params:
         user_id = str(param.user_id)
         if user_id not in latest_per_user:
             latest_per_user[user_id] = param
 
+    # Prepare profile data
     results = []
     for user_id, param in latest_per_user.items():
         user_profile = fetch_user_profile_by_id(user_id)
@@ -81,7 +81,16 @@ def list_user_body_summary(request):
             "last_visit": param.created_at
         })
 
-    return Response(results, status=status.HTTP_200_OK)
+    # Get counts
+    summary_counts = dietician_clients_health_summary(dietician_id)
+
+    # Final combined response
+    response_data = {
+        **summary_counts,
+        "clients": results
+    }
+
+    return Response(response_data, status=status.HTTP_200_OK)
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_body_parameters(request):
@@ -193,6 +202,20 @@ def delete_blood_test_values(request, pk):
     except BloodTestValues.DoesNotExist:
         return Response({'error': 'Blood test not found'}, status=status.HTTP_404_NOT_FOUND)
 
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_blood_by_user_latest_record(request, user_id):
+    print("Called with user_id:", user_id)
+
+    # Get the latest body parameter record for the user
+    latest_record = BodyParameters.objects.filter(user_id=user_id).order_by('-created_at').first()
+
+    if not latest_record:
+        return Response({"message": "No body parameter record found for this user."}, status=404)
+
+    serializer = BodyParametersSerializer(latest_record)
+    return Response(serializer.data, status=200)
 
 
 # ####################### cue ##################
@@ -534,7 +557,7 @@ MODEL_SERIALIZER_MAPPING = {
 
 
 @api_view(['GET'])
-# @permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def get_health_data_by_user(request, user_id):
     model_type = request.GET.get('type')
 
@@ -558,6 +581,32 @@ def get_health_data_by_user(request, user_id):
 
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_latest_health_data_by_user(request, user_id):
+    model_type = request.GET.get('type')
+
+    if not model_type:
+        return Response({'success': False, 'message': 'Query parameter "type" is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    model_info = MODEL_SERIALIZER_MAPPING.get(model_type)
+    if not model_info:
+        return Response({'success': False, 'message': f'Invalid type: {model_type}'}, status=status.HTTP_400_BAD_REQUEST)
+
+    model_class, serializer_class = model_info
+
+    try:
+        # Fetch only the latest record
+        latest_record = model_class.objects.filter(user_id=int(user_id)).order_by('-created_at').first()
+
+        if not latest_record:
+            return Response({'success': True, 'data': None}, status=status.HTTP_200_OK)
+
+        serializer = serializer_class(latest_record)
+        return Response({'success': True, 'data': serializer.data}, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response({'success': False, 'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
     
