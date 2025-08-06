@@ -59,6 +59,11 @@ class Account(AbstractBaseUser):
     Custom user model for the application.
     Uses email as the unique identifier for authentication.
     """
+    GENDER_CHOICES=(
+        ('male', 'Male'),
+        ('female', 'Female'),
+        ('other', 'Other'),
+    )
     ROLE_CHOICES = (
         ('customer', 'Customer'),
         ('dietitian', 'Dietitian'),
@@ -68,7 +73,7 @@ class Account(AbstractBaseUser):
     email = models.EmailField(verbose_name='email', max_length=100, unique=True)
     username = models.CharField(max_length=50, unique=True, null=False)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='customer')
-    gender = models.CharField(blank=True, null=True, max_length=100)
+    gender = models.CharField(max_length=20, choices=GENDER_CHOICES, default='other')
     DOB = models.DateField(blank=True, null=True)
     phone_number = models.CharField(blank=True, null=True, max_length=15)
     profession = models.CharField(blank=True, null=True, max_length=100)
