@@ -181,6 +181,9 @@ def list_accounts(request):
 
     if user.is_superadmin or user.is_admin:
         dietician_id_param = request.query_params.get('dietician_id', None)
+        gender_param = request.query_params.get('gender', None)
+        location_param = request.query_params.get('location', None) 
+        profession_param = request.query_params.get('profession', None)
         if dietician_id_param:
             try:
                 dietician_id_param = int(dietician_id_param)
@@ -188,8 +191,38 @@ def list_accounts(request):
                 count = accounts.count()
             except ValueError:
                 return Response({'error': 'Invalid dietician_id provided. Must be an integer.'}, status=status.HTTP_400_BAD_REQUEST)
+        if gender_param:
+            try:
+                accounts = accounts.filter(gender=gender_param)
+            except ValueError:
+                return Response({'error': 'Invalid gender provided.'}, status=status.HTTP_400_BAD_REQUEST)
+        if location_param:
+            accounts = accounts.filter(location__icontains=location_param)
+        if profession_param:
+            accounts = accounts.filter(profession__icontains=profession_param)
+
     elif user.role == 'dietitian':
-        accounts = accounts.filter(dietician_id=user.id)
+        dietician_id_param = request.query_params.get('dietician_id', None)
+        gender_param = request.query_params.get('gender', None)
+        location_param = request.query_params.get('location', None) 
+        profession_param = request.query_params.get('profession', None)
+        if dietician_id_param:
+            try:
+                dietician_id_param = int(dietician_id_param)
+                accounts = accounts.filter(dietician_id=dietician_id_param)
+                count = accounts.count()
+            except ValueError:
+                return Response({'error': 'Invalid dietician_id provided. Must be an integer.'}, status=status.HTTP_400_BAD_REQUEST)
+        if gender_param:
+            try:
+                accounts = accounts.filter(gender=gender_param)
+            except ValueError:
+                return Response({'error': 'Invalid gender provided.'}, status=status.HTTP_400_BAD_REQUEST)
+        if location_param:
+            accounts = accounts.filter(location__icontains=location_param)
+        if profession_param:
+            accounts = accounts.filter(profession__icontains=profession_param)
+        
         #count = accounts.count()
     else:
         return Response({'error': 'You do not have permission to view accounts.'}, status=status.HTTP_403_FORBIDDEN)
