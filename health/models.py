@@ -9,6 +9,7 @@ from bson import ObjectId
 class BodyParameters(Document):
     #user = ReferenceField(Account, required=True)
     user_id = IntField(required=True)
+    dietician_id = IntField()
     stress_level = FloatField()
     # sleep_time = StringField()
     sleep_time = FloatField()
@@ -46,6 +47,7 @@ class ThyroidProfile(EmbeddedDocument):
 
 class BloodTestValues(Document):
     user_id = IntField(required=True)
+    dietician_id = IntField()
     date = DateTimeField(required=True)
     vitamin_d_25 = FloatField()
     thyroid_profile = EmbeddedDocumentField(ThyroidProfile)
@@ -86,6 +88,7 @@ class MicroscopicExamination(EmbeddedDocument):
 
 class CompleteUrineExamination(Document):
     user_id =IntField(required=True)
+    dietician_id = IntField()
     physical_examination = EmbeddedDocumentField(PhysicalExamination)
     chemical_examination = EmbeddedDocumentField(ChemicalExamination)
     microscopic_examination =EmbeddedDocumentField(MicroscopicExamination)
@@ -133,6 +136,7 @@ class PeripheralBloodSmear(EmbeddedDocument):
 # ESR Master Document
 class ErythrocyteSedimentationRate(Document):
     user_id = IntField(required=True)
+    dietician_id = IntField()
     hemogram = EmbeddedDocumentField(Hemogram)
     peripheral_blood_smear = EmbeddedDocumentField(PeripheralBloodSmear)
     created_at = DateTimeField(default=datetime.datetime.utcnow)
@@ -181,6 +185,7 @@ class IronWithTIBC(EmbeddedDocument):
 
 class BloodUreaNitrogenTest(Document):
     user_id = IntField(required=True)
+    dietician_id = IntField()
     blood_urea_nitrogen =EmbeddedDocumentField(BloodUreaNitrogen)
     calcium_serum = EmbeddedDocumentField(CalciumSerum)
     creatinine_serum = EmbeddedDocumentField(CreatinineSerum)
@@ -199,6 +204,7 @@ class BloodUreaNitrogenTest(Document):
 # ####################    LipidProfile   #######################################
 class LipidProfile(Document):
     user_id = IntField(required=True)
+    dietician_id = IntField()
     total_cholesterol = FloatField()
     hdl_cholesterol = FloatField()
     vldl_cholesterol = FloatField()
@@ -225,6 +231,7 @@ class TransferrinSaturation(EmbeddedDocument):
 
 class LiverFunctionTest(Document):
     user_id = IntField(required=True)
+    dietician_id = IntField()
     total_bilirubin = FloatField()
     direct_bilirubin = FloatField()
     indirect_bilirubin = FloatField()
@@ -251,6 +258,7 @@ class LiverFunctionTest(Document):
 # ####################    MedicalHistory   #######################################
 class MedicalHistory(Document):
     user_id = IntField(required=True)
+    dietician_id = IntField()
     alcohol_smoking = StringField()
     food_allergies = StringField()
     any_other_health_concerns = StringField()
@@ -269,6 +277,7 @@ class MedicalHistory(Document):
 # ####################    DailyRoutine   #######################################
 class DailyRoutine(Document):
     user_id = IntField(required=True)
+    dietician_id = IntField()
     water_intake = FloatField()
     sleep_time = StringField()
     sleep_quality = StringField()
