@@ -135,13 +135,13 @@ def calculate_health_score(body_params):
         # Calculate total score
         total_score = sum(score_components.values())
         
-        # Classify the score
-        if total_score >= 85:
-            status = "Above Average"
-        elif 70 <= total_score < 85:
-            status = "Good"
-        elif 50 <= total_score < 70:
-            status = "Average"
+       # Classify the score
+        if total_score >= 80:
+         status = "Good"
+        elif 60 <= total_score < 80:
+         status = "Moderate"
+        elif 40 <= total_score < 60:
+         status = "Average"
         else:
             status = "Poor"
         
