@@ -23,9 +23,9 @@ def fetch_user_profile_by_id(profile_id):
 
 def dietician_clients_health_summary(dietician_id):
     try:
-        # Fetch users from PostgreSQL by dietician_id
-        # users = Account.objects.filter(dietician_id=dietician_id)
-        users = Account.objects.filter()
+       
+        users = Account.objects.filter(dietician_id=dietician_id)
+       
         total_clients = users.count()
 
         healthy_clients = 0
@@ -37,28 +37,24 @@ def dietician_clients_health_summary(dietician_id):
             latest_param = BodyParameters.objects.filter(user_id=user.id).order_by('-created_at').first()
 
             # Classify health based on score
+            # if latest_param:
+            #     if latest_param.score > 60:
+            #         healthy_clients += 1
+            #     else:
+            #         need_attention += 1
             if latest_param:
-                if latest_param.score > 60:
+                if latest_param.status == "Good":
                     healthy_clients += 1
-                else:
+                elif latest_param.status in ["Average", "Poor"]:
                     need_attention += 1
 
-            # client_list.append({
-            #     "id": user.id,
-            #     "name": user.username,
-            #     "email": user.email,
-            #     "phone_number": user.phone_number,
-            #     "gender": user.gender,
-            #     "DOB": user.DOB,
-            #     "profession": user.profession,
-            #     "location": user.location
-            # })
+            
 
         return {
             "totalClients": total_clients,
             "healthyClients": healthy_clients,
-            "needAttention": need_attention,
-            # "clients": client_list
+            "needsAttention": need_attention,
+            
         }
 
     except Exception as e:

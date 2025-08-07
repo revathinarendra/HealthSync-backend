@@ -20,6 +20,8 @@ def create_body_parameters(request):
     serializer = BodyParametersSerializer(data=request.data)
     if serializer.is_valid():
         body_param = serializer.save()
+        # dietician_id = request.user.dietician_id
+        # body_param.dietician_id = dietician_id
 
         # Prepare input for health score calculation
         body_data = {
