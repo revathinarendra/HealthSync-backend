@@ -184,6 +184,7 @@ def list_accounts(request):
         gender_param = request.query_params.get('gender', None)
         location_param = request.query_params.get('location', None) 
         profession_param = request.query_params.get('profession', None)
+        user_id= request.query_params.get('user_id', None)
         if dietician_id_param:
             try:
                 dietician_id_param = int(dietician_id_param)
@@ -200,6 +201,13 @@ def list_accounts(request):
             accounts = accounts.filter(location__icontains=location_param)
         if profession_param:
             accounts = accounts.filter(profession__icontains=profession_param)
+        
+        if user_id:
+            try:
+                user_id = int(user_id)
+                accounts = accounts.filter(id=user_id)
+            except ValueError:
+                return Response({'error': 'Invalid user_id provided. Must be an integer.'}, status=status.HTTP_400_BAD_REQUEST)
 
     elif user.role == 'dietitian':
         dietician_id_param = request.query_params.get('dietician_id', None)
@@ -222,6 +230,13 @@ def list_accounts(request):
             accounts = accounts.filter(location__icontains=location_param)
         if profession_param:
             accounts = accounts.filter(profession__icontains=profession_param)
+
+        if user_id:
+            try:
+                user_id = int(user_id)
+                accounts = accounts.filter(id=user_id)
+            except ValueError:
+                return Response({'error': 'Invalid user_id provided. Must be an integer.'}, status=status.HTTP_400_BAD_REQUEST)
         
         #count = accounts.count()
     else:
