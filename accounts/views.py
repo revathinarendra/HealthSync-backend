@@ -98,6 +98,50 @@ def register(request):
         return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+from django.shortcuts import get_object_or_404
+@api_view(['PATCH'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+def update_account(request, pk):
+    """
+    Handles PATCH requests to update a specific account by its primary key (pk).
+    The permissions are based on the user's role.
+    """
+    # Retrieve the account to be updated, or return a 404 if not found
+    account = get_object_or_404(Account, pk=pk)
+    current_user = request.user
+    
+    # --- Authorization Logic for Updates ---
+    
+    # Superadmin can edit any account
+    # Admin can edit any account
+    # Dietitian can only edit customer accounts assigned to them
+    # Customer can only edit their own account
+    
+    # Check if the current user has permission to edit this account
+    if not (current_user.is_superadmin or current_user.is_admin):
+        # If the user is a dietitian, check if the target account is a customer
+        # assigned to this dietitian.
+        if current_user.role == 'dietitian' and account.role == 'customer':
+            if account.dietician_id != current_user.pk:
+                return Response({'error': 'You do not have permission to update this customer account.'}, status=status.HTTP_403_FORBIDDEN)
+        # If the user is a customer, check if they are trying to update their own account.
+        elif current_user.role == 'customer':
+            if account.pk != current_user.pk:
+                return Response({'error': 'You do not have permission to update other accounts.'}, status=status.HTTP_403_FORBIDDEN)
+        # For any other roles or unauthorized attempts
+        else:
+            return Response({'error': 'You do not have permission to update this account.'}, status=status.HTTP_403_FORBIDDEN)
+
+    # --- End Authorization Logic ---
+    
+    serializer = AccountSerializer(account, data=request.data, partial=True)
+    
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 # --- Existing user_profile view ---
 @api_view(['GET', 'PATCH']) 
 @authentication_classes([JWTAuthentication])
@@ -175,30 +219,37 @@ def login_view(request):
 @api_view(['GET'])
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated])
+@api_view(['GET'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
 def list_accounts(request):
     user = request.user
     accounts = Account.objects.all()
 
-    if user.is_superadmin or user.is_admin:
+    if user.is_superadmin or user.is_admin or user.role == 'dietitian':
         dietician_id_param = request.query_params.get('dietician_id', None)
         gender_param = request.query_params.get('gender', None)
-        location_param = request.query_params.get('location', None) 
+        location_param = request.query_params.get('location', None)
         profession_param = request.query_params.get('profession', None)
-        user_id= request.query_params.get('user_id', None)
+        user_id = request.query_params.get('user_id', None)
+        sort_by_name = request.query_params.get('sort_by_name', None)
+
         if dietician_id_param:
             try:
                 dietician_id_param = int(dietician_id_param)
                 accounts = accounts.filter(dietician_id=dietician_id_param)
-                count = accounts.count()
             except ValueError:
                 return Response({'error': 'Invalid dietician_id provided. Must be an integer.'}, status=status.HTTP_400_BAD_REQUEST)
+        
         if gender_param:
             try:
                 accounts = accounts.filter(gender=gender_param)
             except ValueError:
                 return Response({'error': 'Invalid gender provided.'}, status=status.HTTP_400_BAD_REQUEST)
+        
         if location_param:
             accounts = accounts.filter(location__icontains=location_param)
+        
         if profession_param:
             accounts = accounts.filter(profession__icontains=profession_param)
         
@@ -208,40 +259,16 @@ def list_accounts(request):
                 accounts = accounts.filter(id=user_id)
             except ValueError:
                 return Response({'error': 'Invalid user_id provided. Must be an integer.'}, status=status.HTTP_400_BAD_REQUEST)
-
-    elif user.role == 'dietitian':
-        dietician_id_param = request.query_params.get('dietician_id', None)
-        gender_param = request.query_params.get('gender', None)
-        location_param = request.query_params.get('location', None) 
-        profession_param = request.query_params.get('profession', None)
-        if dietician_id_param:
-            try:
-                dietician_id_param = int(dietician_id_param)
-                accounts = accounts.filter(dietician_id=dietician_id_param)
-                count = accounts.count()
-            except ValueError:
-                return Response({'error': 'Invalid dietician_id provided. Must be an integer.'}, status=status.HTTP_400_BAD_REQUEST)
-        if gender_param:
-            try:
-                accounts = accounts.filter(gender=gender_param)
-            except ValueError:
-                return Response({'error': 'Invalid gender provided.'}, status=status.HTTP_400_BAD_REQUEST)
-        if location_param:
-            accounts = accounts.filter(location__icontains=location_param)
-        if profession_param:
-            accounts = accounts.filter(profession__icontains=profession_param)
-
-        if user_id:
-            try:
-                user_id = int(user_id)
-                accounts = accounts.filter(id=user_id)
-            except ValueError:
-                return Response({'error': 'Invalid user_id provided. Must be an integer.'}, status=status.HTTP_400_BAD_REQUEST)
         
-        #count = accounts.count()
+        # Apply sorting logic
+        if sort_by_name == 'desc':
+            accounts = accounts.order_by('-name')  # Z-A sorting
+        else:
+            accounts = accounts.order_by('name')   # Default A-Z sorting
+        
+        
     else:
         return Response({'error': 'You do not have permission to view accounts.'}, status=status.HTTP_403_FORBIDDEN)
-
 
     paginator = AccountPagination()
     paginated_accounts = paginator.paginate_queryset(accounts, request)

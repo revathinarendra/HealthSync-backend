@@ -17,11 +17,11 @@ urlpatterns = [
     path('', views.home, name='home'),
     # Health check for all apps
     path('health/', views.HealthCheckView.as_view(), name='global_health_check'),  
-    path('api/', include('accounts.urls')),  # Ensure 'accounts.urls' exists
+    path('api/accounts/', include('accounts.urls')),  # Ensure 'accounts.urls' exists
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
-    path('api/health/',include('health.urls'))
+    path('api/health/',include('health.urls')),
 ]
 
 # Serve static and media files in development
