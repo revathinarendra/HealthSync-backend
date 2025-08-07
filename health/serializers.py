@@ -245,12 +245,39 @@ class CartItemSerializer(serializers.EmbeddedDocumentSerializer):
 # -------------------------
 # Cart Serializer
 # -------------------------
+
 class CartSerializer(serializers.DocumentSerializer):
     items = CartItemSerializer(required=False, many=True)
 
     class Meta:
         model = Cart
         fields = '__all__'
+
+    def create(self, validated_data):
+        items_data = validated_data.pop('items', [])
+        cart_items = [CartItem(**item) for item in items_data]
+
+        cart = Cart(**validated_data)
+        cart.items = cart_items
+        cart.clean()  # calculate totals
+        cart.save()
+        return cart
+
+    def update(self, instance, validated_data):
+        items_data = validated_data.pop('items', None)
+
+        # Update scalar fields (e.g., user_id, etc.)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        # Replace entire item list if items are provided
+        if items_data is not None:
+            instance.items = [CartItem(**item) for item in items_data]
+
+        instance.clean()  # recalculate totals
+        instance.save()
+        return instance
+
 
 class AppointmentSerializer(serializers.DocumentSerializer):
     class Meta:

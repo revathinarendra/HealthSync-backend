@@ -798,6 +798,21 @@ def add_item_to_cart(request):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     except Exception as e:
         return Response({"detail": f"Error saving cart: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+##### cart update view ##S######
+@api_view(['PUT'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+def update_cart(request, cart_id):
+    try:
+        cart = Cart.objects.get(id=cart_id)
+    except Cart.DoesNotExist:
+        return Response({"detail": "Cart not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = CartSerializer(cart, data=request.data, partial=True)  # use partial=True for PATCH
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
 @authentication_classes([JWTAuthentication])
