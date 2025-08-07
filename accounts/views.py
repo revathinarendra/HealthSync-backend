@@ -142,6 +142,11 @@ def update_account(request, pk):
         return Response(serializer.data, status=status.HTTP_200_OK)
     
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+
 # --- Existing user_profile view ---
 @api_view(['GET', 'PATCH']) 
 @authentication_classes([JWTAuthentication])
@@ -216,9 +221,7 @@ def login_view(request):
 
 
 # --- Existing list_accounts view ---
-@api_view(['GET'])
-@authentication_classes([JWTAuthentication])
-@permission_classes([IsAuthenticated])
+
 @api_view(['GET'])
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated])
@@ -262,11 +265,11 @@ def list_accounts(request):
         
         # Apply sorting logic
         if sort_by_name == 'desc':
-            accounts = accounts.order_by('-name')  # Z-A sorting
+            accounts = accounts.order_by('-username')  # Z-A sorting
         else:
-            accounts = accounts.order_by('name')   # Default A-Z sorting
-        
-        
+            accounts = accounts.order_by('username')   # Default A-Z sorting
+
+
     else:
         return Response({'error': 'You do not have permission to view accounts.'}, status=status.HTTP_403_FORBIDDEN)
 
