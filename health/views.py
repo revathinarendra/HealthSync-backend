@@ -624,9 +624,7 @@ def test_create(request):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-@api_view(['GET'])
-@authentication_classes([JWTAuthentication])
-@permission_classes([IsAuthenticated]) 
+@api_view(['GET']) 
 def test_list(request):
     tests = Test.objects.all() 
     serializer = TestSerializer(tests, many=True)
