@@ -7,3 +7,6 @@ __pycache__/
 *.pyc
 __pycache__
 
+# Ignore my CSV data files
+accounts/cities.csv
+accounts/Book(Sheet1).csv
