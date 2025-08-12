@@ -630,6 +630,19 @@ def test_list(request):
     serializer = TestSerializer(tests, many=True)
     return Response(serializer.data)
 
+
+@api_view(['GET'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+def test_detail(request, pk):
+    try:
+        test = Test.objects.get(id=pk)
+    except Test.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    serializer = TestSerializer(test)
+    return Response(serializer.data)
+
 @api_view(['PUT'])
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated])
