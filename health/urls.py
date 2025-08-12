@@ -86,6 +86,7 @@ urlpatterns = [
     path('test/list/', views.test_list, name='test_list'),
     path('test/<str:pk>/', views.test_update, name='test_update'),
     path('test/delete/<str:pk>/', views.test_delete, name='test_delete'),
+    path('test/detail/<str:pk>/', views.test_detail, name='test_detail'),
     
 
 
