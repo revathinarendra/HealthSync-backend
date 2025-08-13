@@ -256,21 +256,102 @@ class LiverFunctionTest(Document):
 
 
 # ####################    MedicalHistory   #######################################
+# class MedicalHistory(Document):
+#     user_id = IntField(required=True)
+#     dietician_id = IntField()
+#     alcohol_smoking = StringField()
+#     food_allergies = StringField()
+#     any_other_health_concerns = StringField()
+#     special_mentions = StringField()
+#     current_medication = StringField()
+#     father_side_medical_details = StringField()
+#     mother_side_medical_details = StringField()
+
+#     created_at = DateTimeField(default=datetime.datetime.utcnow)
+#     updated_at = DateTimeField(default=datetime.datetime.utcnow)
+
+#     meta = {'collection': 'medical_history'}
+
+
+
+# ------------------ Embedded Documents ------------------
+
+class Alcohol(EmbeddedDocument):
+    status = StringField()
+    frequency = StringField()
+    type = StringField()
+    duration = StringField()
+    riskLevel = StringField()
+
+class Smoking(EmbeddedDocument):
+    status = StringField()
+    frequency = StringField()
+    quitDate = StringField()  # could also be DateTimeField if you want strict date
+    packYears = IntField()
+    riskLevel = StringField()
+
+class Lifestyle(EmbeddedDocument):
+    alcohol = EmbeddedDocumentField(Alcohol)
+    smoking = EmbeddedDocumentField(Smoking)
+
+class Allergy(EmbeddedDocument):
+    allergen = StringField()
+    severity = StringField()
+    reaction = StringField()
+    diagnosed = StringField()
+
+class Allergies(EmbeddedDocument):
+    food = ListField(EmbeddedDocumentField(Allergy))
+    drug = ListField(EmbeddedDocumentField(Allergy))
+    environmental = ListField(EmbeddedDocumentField(Allergy))
+
+class HealthConcern(EmbeddedDocument):
+    condition = StringField()
+    status = StringField()
+    diagnosedDate = StringField()
+    severity = StringField()
+    treatment = StringField()
+
+class Medication(EmbeddedDocument):
+    name = StringField()
+    dosage = StringField()
+    frequency = StringField()
+    purpose = StringField()
+    startDate = StringField()
+    prescribedBy = StringField()
+
+class FamilyCondition(EmbeddedDocument):
+    condition = StringField()
+    ageOfOnset = IntField()
+    status = StringField()
+
+class ParentHistory(EmbeddedDocument):
+    age = IntField()
+    conditions = ListField(EmbeddedDocumentField(FamilyCondition))
+    lifestyle = StringField()
+
+class FamilyHistory(EmbeddedDocument):
+    father = EmbeddedDocumentField(ParentHistory)
+    mother = EmbeddedDocumentField(ParentHistory)
+
+
+# ------------------ Main Document ------------------
+
 class MedicalHistory(Document):
     user_id = IntField(required=True)
     dietician_id = IntField()
-    alcohol_smoking = StringField()
-    food_allergies = StringField()
-    any_other_health_concerns = StringField()
-    special_mentions = StringField()
-    current_medication = StringField()
-    father_side_medical_details = StringField()
-    mother_side_medical_details = StringField()
+
+    lifestyle = EmbeddedDocumentField(Lifestyle)
+    allergies = EmbeddedDocumentField(Allergies)
+    healthConcerns = ListField(EmbeddedDocumentField(HealthConcern))
+    currentMedications = ListField(EmbeddedDocumentField(Medication))
+    familyHistory = EmbeddedDocumentField(FamilyHistory)
 
     created_at = DateTimeField(default=datetime.datetime.utcnow)
     updated_at = DateTimeField(default=datetime.datetime.utcnow)
 
     meta = {'collection': 'medical_history'}
+
 
 
 

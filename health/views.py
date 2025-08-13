@@ -58,24 +58,26 @@ def create_body_parameters(request):
         }, status=status.HTTP_201_CREATED)
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_user_body_summary(request, dietician_id):
-    all_params = BodyParameters.objects.filter(dietician_id=dietician_id).order_by('-created_at')
-    print("all_params",all_params)
+    summary_counts = dietician_clients_health_summary(dietician_id)
+
+    user_ids = summary_counts.pop("_userIds", [])  # remove from final response
+
+    all_params = BodyParameters.objects.filter(user_id__in=user_ids).order_by('-created_at')
+
     latest_per_user = {}
     for param in all_params:
-        user_id = str(param.user_id)
-        if user_id not in latest_per_user:
-            latest_per_user[user_id] = param
+        uid = str(param.user_id)
+        if uid not in latest_per_user:
+            latest_per_user[uid] = param
 
-    # Prepare profile data
     results = []
-    for user_id, param in latest_per_user.items():
-        user_profile = fetch_user_profile_by_id(user_id)
+    for uid, param in latest_per_user.items():
+        user_profile = fetch_user_profile_by_id(uid)
         results.append({
-            "userId": user_id,
+            "userId": uid,
             "userProfile": user_profile,
             "bmi": param.bmi,
             "score": param.score,
@@ -83,16 +85,14 @@ def list_user_body_summary(request, dietician_id):
             "last_visit": param.created_at
         })
 
-    # Get counts
-    summary_counts = dietician_clients_health_summary(dietician_id)
-
-    # Final combined response
     response_data = {
-        **summary_counts,
+        **summary_counts,  # now contains only counts
         "clients": results
     }
 
     return Response(response_data, status=status.HTTP_200_OK)
+
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_body_parameters(request):

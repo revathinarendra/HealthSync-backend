@@ -19,13 +19,9 @@ def fetch_user_profile_by_id(profile_id):
         return {"error": "User profile not found."}
     except Exception as e:
         return {"error": f"Unexpected error: {str(e)}"}
-
-
 def dietician_clients_health_summary(dietician_id):
     try:
-       
         users = Account.objects.filter(dietician_id=dietician_id)
-       
         total_clients = users.count()
 
         healthy_clients = 0
@@ -33,28 +29,20 @@ def dietician_clients_health_summary(dietician_id):
         client_list = []
 
         for user in users:
-            # Fetch latest body parameter from MongoDB
-            latest_param = BodyParameters.objects.filter(user_id=user.id).order_by('-created_at').first()
+            client_list.append(user.id)  # internal use only
 
-            # Classify health based on score
-            # if latest_param:
-            #     if latest_param.score > 60:
-            #         healthy_clients += 1
-            #     else:
-            #         need_attention += 1
+            latest_param = BodyParameters.objects.filter(user_id=user.id).order_by('-created_at').first()
             if latest_param:
                 if latest_param.status == "Good":
                     healthy_clients += 1
                 elif latest_param.status in ["Average", "Poor"]:
                     need_attention += 1
 
-            
-
         return {
             "totalClients": total_clients,
             "healthyClients": healthy_clients,
             "needsAttention": need_attention,
-            
+            "_userIds": client_list  # underscore to mark as internal
         }
 
     except Exception as e:
