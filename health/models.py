@@ -369,6 +369,7 @@ class CartItem(EmbeddedDocument):
     testName = StringField()
     parameterCount = IntField()
     quantity = IntField(default=1)
+    price = FloatField(required=True)
 
 
 # -------------------------

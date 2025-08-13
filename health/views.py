@@ -643,6 +643,9 @@ def test_detail(request, pk):
     serializer = TestSerializer(test)
     return Response(serializer.data)
 
+
+
+
 @api_view(['PUT'])
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated])
@@ -724,6 +727,9 @@ from .serializers import CartSerializer
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated])
 def add_to_cart_create(request):
+    user_id=request.user.id
+    if Cart.objects(user_id=user_id).first():
+        return Response({"detail": "Cart already exists for this user."}, status=status.HTTP_400_BAD_REQUEST)
     serializer = CartSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()#either updates or creates a new cart
@@ -796,6 +802,7 @@ def add_item_to_cart(request):
                 testName=test_obj.testName,
                 parameterCount=test_obj.parametersCovered_count,
                 quantity=quantity,
+                price=test_obj.price,
             )
         except AttributeError:
             return Response({"detail": "Missing required fields in test object."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
