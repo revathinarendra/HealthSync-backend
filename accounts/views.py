@@ -25,6 +25,10 @@ from django.conf import settings
 import random
 import string
 from django.utils import timezone
+from health.models import Cart
+from health.serializers import CartSerializer
+from health.serializers import TestSerializer
+
 
 class CitiesListView(generics.ListAPIView):
     queryset = Cities.objects.filter(is_active=True)
@@ -90,6 +94,7 @@ def register(request):
     if user_serializer.is_valid():
         if not Account.objects.filter(email=user_serializer.validated_data['email']).exists():
             user = user_serializer.save()
+            Cart.objects.create(user_id=user.id)
             # Optionally send a welcome email or first-time login instructions here
             return Response({'message': f'{requested_role.capitalize()} account registered successfully. Please use forgot password to set your actual password.'}, status=status.HTTP_201_CREATED)
         else:
