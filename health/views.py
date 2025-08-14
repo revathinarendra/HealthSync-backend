@@ -1,3 +1,4 @@
+from unicodedata import category
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.response import Response
@@ -626,7 +627,8 @@ def test_create(request):
 
 @api_view(['GET']) 
 def test_list(request):
-    tests = Test.objects.all() 
+    category = request.data.get('category')
+    tests=Test.objects.filter(category=category) if category else Test.objects.all()
     serializer = TestSerializer(tests, many=True)
     return Response(serializer.data)
 
