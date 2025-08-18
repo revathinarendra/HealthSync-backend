@@ -1,4 +1,6 @@
 from unicodedata import category
+from django.utils.dateparse import parse_date
+from datetime import datetime, timedelta
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.response import Response
@@ -588,20 +590,53 @@ def get_health_data_by_user(request, user_id):
 @permission_classes([IsAuthenticated])
 def get_latest_health_data_by_user(request, user_id):
     model_type = request.GET.get('type')
+    last_updated = request.GET.get('last_updated')  # optional YYYY-MM-DD
 
     if not model_type:
-        return Response({'success': False, 'message': 'Query parameter "type" is required.'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            {'success': False, 'message': 'Query parameter "type" is required.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
     model_info = MODEL_SERIALIZER_MAPPING.get(model_type)
     if not model_info:
-        return Response({'success': False, 'message': f'Invalid type: {model_type}'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            {'success': False, 'message': f'Invalid type: {model_type}'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
     model_class, serializer_class = model_info
 
     try:
-        # Fetch only the latest record
-        latest_record = model_class.objects.filter(user_id=int(user_id)).order_by('-created_at').first()
+        queryset = model_class.objects.filter(user_id=int(user_id))
 
+        # ✅ If last_updated param is provided → filter by DATE only
+        if last_updated:
+            filter_date = parse_date(last_updated)
+            if not filter_date:
+                return Response(
+                    {'success': False, 'message': 'Invalid date format for last_updated. Use YYYY-MM-DD.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Start & end of the given day
+            start_of_day = datetime.combine(filter_date, datetime.min.time())
+            end_of_day = start_of_day + timedelta(days=1)
+
+            # MongoEngine range query
+            records = queryset.filter(created_at__gte=start_of_day, created_at__lt=end_of_day).order_by('created_at')
+
+            if not records:
+                return Response(
+                    {'success': False, 'message': 'No records found'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            serializer = serializer_class(records, many=True)
+            return Response({'success': True, 'data': serializer.data}, status=status.HTTP_200_OK)
+
+        # ✅ Default logic (unchanged): latest single record
+        latest_record = queryset.order_by('-created_at').first()
         if not latest_record:
             return Response({'success': True, 'data': None}, status=status.HTTP_200_OK)
 
@@ -609,10 +644,7 @@ def get_latest_health_data_by_user(request, user_id):
         return Response({'success': True, 'data': serializer.data}, status=status.HTTP_200_OK)
 
     except Exception as e:
-        return Response({'success': False, 'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-    
+        return Response({'success': False, 'message': str(e)}, status=400 )
 ##################test#######################
 from .serializers import TestSerializer
 @api_view(['POST'])
