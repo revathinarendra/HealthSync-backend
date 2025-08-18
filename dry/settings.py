@@ -179,7 +179,8 @@ CORS_ALLOWED_ORIGINS = [
     'https://nucleux.vercel.app',
     'http://localhost:3000',
     'http://127.0.0.1:3000',
-    'https://13.127.202.85'
+    'https://13.127.202.85',
+    'https://health-sync-dynamic.vercel.app'
 ]
 CORS_ALLOW_METHODS = [
     'GET',
