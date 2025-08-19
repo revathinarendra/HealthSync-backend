@@ -449,7 +449,7 @@ class CartItem(EmbeddedDocument):
     test = ReferenceField(Test, required=True)
     testName = StringField()
     parameterCount = IntField()
-    quantity = IntField(default=1)
+    #quantity = IntField(default=1)
     price = FloatField(required=True)
 
 
@@ -471,7 +471,7 @@ class Cart(Document):
     def clean(self):
         """Auto-calculate totals before saving"""
         try:
-            self.subTotal = sum(item.test.price * item.quantity for item in self.items)
+            self.subTotal = sum(item.test.price for item in self.items)
             self.total = self.subTotal
             self.netPayableAmount = self.total  # Can apply discounts/coupons later
         except Exception as e:
