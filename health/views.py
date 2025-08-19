@@ -781,13 +781,13 @@ def add_to_cart_create(request):
 def add_item_to_cart(request):
     user_id = request.user.id
     test_id = request.data.get('test_id')
-    quantity = request.data.get('quantity', 1)
+    #quantity = request.data.get('quantity', 1)
 
     if not test_id:
         return Response({"detail": "Test ID is required."}, status=status.HTTP_400_BAD_REQUEST)
 
-    if not isinstance(quantity, int) or quantity <= 0:
-        return Response({"detail": "Quantity must be a positive integer."}, status=status.HTTP_400_BAD_REQUEST)
+    #if not isinstance(quantity, int) or quantity <= 0:
+        #return Response({"detail": "Quantity must be a positive integer."}, status=status.HTTP_400_BAD_REQUEST)
 
     # Fetch test
     try:
@@ -828,14 +828,14 @@ def add_item_to_cart(request):
             return Response({"detail": f"Error reading cart item test reference: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     if cart_item_found:
-        cart_item_found.quantity += quantity
+        return Response({"detail": "Test already exists in cart."}, status=status.HTTP_400_BAD_REQUEST)
     else:
         try:
             new_cart_item = CartItem(
                 test=test_obj,
                 testName=test_obj.testName,
                 parameterCount=test_obj.parametersCovered_count,
-                quantity=quantity,
+                #quantity=quantity,
                 price=test_obj.price,
             )
         except AttributeError:
