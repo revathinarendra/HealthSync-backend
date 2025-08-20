@@ -22,38 +22,35 @@ from .serializers import BodyParametersSerializer, BloodTestValuesSerializer,Com
 def create_body_parameters(request):
     serializer = BodyParametersSerializer(data=request.data)
     if serializer.is_valid():
-        body_param = serializer.save()
-        # dietician_id = request.user.dietician_id
-        # body_param.dietician_id = dietician_id
-
-        # Prepare input for health score calculation
+        # Prepare input for health score calculation from request.data directly
         body_data = {
-            'height': body_param.height,
-            'weight': body_param.weight,
-            'BMI': body_param.bmi,
-            'body_fat': body_param.body_fat,
-            'muscle': body_param.muscle,
-            'viseral_fats': body_param.viseral_fats,
-            'sleep_time': body_param.sleep_time,
-            'sleep_quality': body_param.sleep_quality,
-            'stress_level': body_param.stress_level,
-            'body_age': body_param.body_age,
-            'waste_water': body_param.waste_water,
+            'height': request.data.get('height'),
+            'weight': request.data.get('weight'),
+            'BMI': request.data.get('bmi'),  # assuming key name in request
+            'body_fat': request.data.get('body_fat'),
+            'muscle': request.data.get('muscle'),
+            'viseral_fats': request.data.get('viseral_fats'),
+            'sleep_time': request.data.get('sleep_time'),
+            'sleep_quality': request.data.get('sleep_quality'),
+            'stress_level': request.data.get('stress_level'),
+            'body_age': request.data.get('body_age'),
+            'waste_water': request.data.get('waste_water'),
         }
 
         result = calculate_health_score(body_data)
-        print(result)
-        # Update model instance with score data
-       
-        if 'error' not in result:
-            body_param.score = result['score']  # float
-            body_param.status = result['status']  # string
-        else:
-            body_param.score = 0.0
-            body_param.status = 'Error'
-        # components = result.get('components', {})
-        # body_param.components = components
-        body_param.save()
+
+        # If error, stop here and return failure response
+        if 'error' in result:
+            return Response({
+                'message': 'Health score calculation failed.',
+                'error': result['error']
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Save only if calculation worked
+        body_param = serializer.save(
+            score=result['score'],
+            status=result['status']
+        )
 
         return Response({
             'message': 'Body parameters saved successfully.',
@@ -61,6 +58,7 @@ def create_body_parameters(request):
         }, status=status.HTTP_201_CREATED)
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_user_body_summary(request, dietician_id):
